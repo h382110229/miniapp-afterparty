@@ -39,13 +39,22 @@ async function main() {
   });
 
   // Serve static H5 client if built
-  const h5Path = path.resolve(__dirname, '../../../apps/client/dist/build/h5');
-  if (fs.existsSync(h5Path)) {
+  const candidatePaths = [
+    path.resolve(__dirname, '../../client/dist/build/h5'),
+    path.resolve(__dirname, '../../../apps/client/dist/build/h5'),
+    path.resolve(process.cwd(), 'apps/client/dist/build/h5'),
+    path.resolve(process.cwd(), 'dist/build/h5'),
+    path.resolve('/app/apps/client/dist/build/h5'),
+  ];
+  const h5Path = candidatePaths.find(p => fs.existsSync(p));
+  if (h5Path) {
     server.log.info(`[Gateway] Serving H5 client from ${h5Path}`);
     await server.register(fastifyStatic, {
       root: h5Path,
       prefix: '/',
     });
+  } else {
+    server.log.warn('[Gateway] No H5 client build found in candidate paths');
   }
 
   // Initialize DB

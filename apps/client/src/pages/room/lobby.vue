@@ -149,7 +149,7 @@ function copyShareLink() {
   const link = `${window.location.origin}/#/pages/room/lobby?code=${code}`;
   // #endif
   // #ifndef H5
-  const link = `https://afterparty.miniapp.ashawk.online/#/pages/room/lobby?code=${code}`;
+  const link = `https://afterparty.miniapp.hawkren.online/#/pages/room/lobby?code=${code}`;
   // #endif
 
   uni.setClipboardData({

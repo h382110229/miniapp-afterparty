@@ -26,7 +26,7 @@ class SocketService {
 
       // #ifndef H5
       // WeChat Mini Program fallback endpoint (production domain)
-      this.url = 'wss://afterparty.miniapp.ashawk.online/ws';
+      this.url = 'wss://afterparty.miniapp.hawkren.online/ws';
       // #endif
     }
 

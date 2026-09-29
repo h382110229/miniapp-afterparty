@@ -109,7 +109,7 @@ pnpm dev:client:mp
 ### 2. 宿主机 Caddyfile 追加反代配置
 在宿主机 `/data/app/caddy/Caddyfile` 中追加以下规则：
 ```caddy
-afterparty.miniapp.ashawk.online {
+afterparty.miniapp.hawkren.online {
     reverse_proxy afterparty-gateway:4000
     encode gzip
 }

@@ -12,4 +12,7 @@ dist
 *.sln
 *.sw?
 unpackage/
-apps/client/dist
+apps/client/dist/dev
+apps/client/dist/build/mp-weixin
+!apps/client/dist/build/h5
+

@@ -218,7 +218,7 @@ function getApiUrl(path: string): string {
   return path;
   // #endif
   // #ifndef H5
-  return `https://afterparty.miniapp.ashawk.online${path}`;
+  return `https://afterparty.miniapp.hawkren.online${path}`;
   // #endif
 }
 </script>
