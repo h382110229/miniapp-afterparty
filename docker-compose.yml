@@ -1,0 +1,76 @@
+# =============================================================================
+# AfterParty — Microservices Docker Compose for OCI ARM64
+# =============================================================================
+
+version: "3.9"
+
+networks:
+  app_infra-net:
+    external: true
+    name: app_infra-net
+  afterparty-net:
+    driver: bridge
+
+services:
+  # ── 1. Gateway & Room WebSocket Hub ─────────────────────────────────────────
+  afterparty-gateway:
+    container_name: afterparty-gateway
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "4000"
+      HOST: "0.0.0.0"
+      NODE_ENV: production
+      # OCI shared Redis on app_infra-net
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # OCI shared PostgreSQL on app_infra-net
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-afterparty}
+      POSTGRES_USER: ${POSTGRES_USER:-afterparty}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # JWT & WeChat Config
+      JWT_SECRET: ${JWT_SECRET:-afterparty-jwt-production-secret-2026}
+      WX_APPID: ${WX_APPID:-wx56d412dc73b6b199}
+      WX_APPSECRET: ${WX_APPSECRET:-}
+    ports:
+      - "127.0.0.1:4000:4000"
+    networks:
+      - app_infra-net
+      - afterparty-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
+  # ── 2. Card High-Low Microservice ───────────────────────────────────────────
+  afterparty-game-highlow:
+    container_name: afterparty-game-highlow
+    build:
+      context: .
+      dockerfile: apps/game-card-highlow/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      - app_infra-net
+      - afterparty-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M

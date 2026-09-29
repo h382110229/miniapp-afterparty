@@ -1,0 +1,19 @@
+{
+  "name": "afterparty-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AfterParty 酒后派对 - 酒吧娱乐小游戏合集与微服务平台",
+  "scripts": {
+    "dev:gateway": "pnpm --filter @afterparty/gateway dev",
+    "dev:game-highlow": "pnpm --filter @afterparty/game-card-highlow dev",
+    "dev:client:h5": "pnpm --filter @afterparty/client dev:h5",
+    "dev:client:mp": "pnpm --filter @afterparty/client dev:mp-weixin",
+    "build": "pnpm -r build",
+    "build:client:h5": "pnpm --filter @afterparty/client build:h5",
+    "build:client:mp": "pnpm --filter @afterparty/client build:mp-weixin",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
