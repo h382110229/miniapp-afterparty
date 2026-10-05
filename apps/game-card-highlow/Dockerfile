@@ -18,9 +18,9 @@ ENV NODE_ENV=production
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* .npmrc ./
 COPY packages/shared-types/package.json ./packages/shared-types/
-COPY packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY apps/game-card-highlow/package.json ./apps/game-card-highlow/
-COPY apps/game-card-highlow/dist ./apps/game-card-highlow/dist
+COPY --from=builder /app/apps/game-card-highlow/dist ./apps/game-card-highlow/dist
 
 RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile=false
 
