@@ -2,95 +2,127 @@
   <view class="dice-arena">
     <!-- Top Navigation Bar -->
     <view class="top-nav glass-panel">
-      <button class="nav-btn back-btn" @tap="goBack">
+      <view class="nav-btn" hover-class="btn-hover" @tap="goBack">
         <text class="btn-icon">←</text>
         <text class="btn-text">返回</text>
-      </button>
+      </view>
 
       <view class="title-box">
         <text class="title-main">酒吧大话骰</text>
-        <text class="title-sub">实体替代 · 防偷窥摇盅</text>
+        <text class="title-sub">实体替代 · 3D 拟真防偷窥摇盅</text>
       </view>
 
       <view class="nav-actions">
         <!-- Sound Mute Toggle -->
-        <button class="icon-btn" :class="{ 'is-muted': isMuted }" @tap="toggleMute">
+        <view class="icon-btn" :class="{ 'is-muted': isMuted }" hover-class="btn-hover" @tap="toggleMute">
           <text class="icon-text">{{ isMuted ? '🔇' : '🔊' }}</text>
-        </button>
+        </view>
       </view>
     </view>
 
-    <!-- Main Dice Cup Container -->
-    <view class="cup-section">
-      <!-- Dice Tray & Velvet Arena -->
-      <view class="dice-cup-box" :class="{ 'is-shaking': isShaking }">
-        <!-- Base Felt Tray with Dice -->
-        <view class="tray-felt" @tap="handleTrayTap">
-          <!-- Subtle Felt Texture / Glow Ring -->
-          <view class="felt-ring"></view>
+    <!-- Main 3D Dice Cup & Arena Section -->
+    <view class="stage-section">
+      <!-- 3D Table Shadow Underneath Tray -->
+      <view class="table-shadow" :class="{ 'shadow-active': isShaking }"></view>
 
-          <!-- Dice Container -->
-          <view class="dice-scatter-zone" :class="{ 'is-sorted': isSorted }">
-            <view
-              v-for="(die, index) in dice"
-              :key="index"
-              class="die-wrapper"
-              :style="getDieStyle(die, index)"
-            >
-              <DieFace
-                :value="die.value"
-                :size="dieSize"
-                :rotation="isSorted ? 0 : die.rotation"
-                :highlight="isSorted && die.value === 1"
-              />
+      <!-- Outer Felt Tray Base (Fixed on Table) -->
+      <view class="felt-tray-base" @tap="handleTrayTap">
+        <!-- Tray Outer Metallic Bezel Ring -->
+        <view class="tray-bezel">
+          <!-- Tray Green Velvet Felt Interior -->
+          <view class="tray-velvet">
+            <view class="felt-stitch-ring"></view>
+
+            <!-- Dice Scatter Zone inside Velvet Tray -->
+            <view class="dice-zone" :class="{ 'is-sorted': isSorted }">
+              <view
+                v-for="(die, index) in dice"
+                :key="index"
+                class="die-wrapper"
+                :style="getDieStyle(die, index)"
+              >
+                <DieFace
+                  :value="die.value"
+                  :size="dieSize"
+                  :rotation="isSorted ? 0 : die.rotation"
+                  :highlight="isSorted && die.value === 1"
+                />
+              </view>
             </view>
-          </view>
 
-          <!-- Tally Summary Pill (Shows in sorted mode or when lid is open) -->
-          <view v-if="lidProgress >= 0.7 || isSorted" class="tally-pill glass-panel">
-            <text class="tally-text">{{ tallySummary }}</text>
+            <!-- Tally Summary Overlay Pill -->
+            <view v-if="lidProgress >= 0.6 || isSorted" class="tally-pill glass-panel">
+              <text class="tally-text">{{ tallySummary }}</text>
+            </view>
           </view>
         </view>
 
-        <!-- Sliding Cup Lid (Touch & Drag to Peek / Lift) -->
+        <!-- 3D Realistic Dice Cup (Slides Up to Peek / Shake Animation) -->
         <view
-          class="cup-lid"
-          :class="{ 'is-animating': !isDragging }"
-          :style="{ transform: `translateY(-${lidProgress * 105}%)` }"
+          class="cup-3d"
+          :class="{
+            'is-shaking': isShaking,
+            'is-animating': !isDragging && !isShaking
+          }"
+          :style="{ transform: cupTransformStyle }"
           @touchstart="onTouchStart"
           @touchmove="onTouchMove"
           @touchend="onTouchEnd"
           @touchcancel="onTouchEnd"
         >
-          <!-- Cup Lid Luxury Texture & Cyber Rim -->
-          <view class="lid-body">
-            <view class="lid-rim"></view>
-            <view class="lid-handle">
-              <view class="grip-line"></view>
-              <view class="grip-line"></view>
-              <view class="grip-line"></view>
-            </view>
-
-            <view class="lid-indicator">
-              <text class="hint-arrow">{{ lidProgress > 0.5 ? '⬇️' : '⬆️' }}</text>
-              <text class="hint-label">
-                {{ lidProgress > 0.5 ? '已掀开 (下滑盖回)' : '按住上推偷瞄 (松手自动盖回)' }}
-              </text>
-            </view>
-
-            <view class="lid-logo">
-              <text class="logo-emoji">🍸</text>
-              <text class="logo-brand">AFTERPARTY</text>
-            </view>
+          <!-- Cup Top Grip Knob / Crown (金顶抓钮) -->
+          <view class="cup-knob">
+            <view class="knob-cap"></view>
+            <view class="knob-ring"></view>
           </view>
+
+          <!-- Cup Body (Realistic 3D Bell Silhouette with Shading & Metallic Trims) -->
+          <view class="cup-body">
+            <!-- Top Gold Collar Ring (顶口金箍) -->
+            <view class="gold-collar"></view>
+
+            <!-- Grip Ribs & Touch Peek Indicator -->
+            <view class="cup-indicator-panel">
+              <view class="grip-grooves">
+                <view class="groove-line"></view>
+                <view class="groove-line"></view>
+                <view class="groove-line"></view>
+              </view>
+
+              <view class="peek-hint-box">
+                <text class="hint-arrow-icon">{{ lidProgress > 0.5 ? '⬇️' : '⬆️' }}</text>
+                <text class="hint-main-text">
+                  {{ lidProgress > 0.5 ? '已掀开 (下滑重新盖严)' : '按住上推偷瞄' }}
+                </text>
+                <text class="hint-sub-text" v-if="lidProgress <= 0.5">
+                  (松手自动落盖防偷窥)
+                </text>
+              </view>
+            </view>
+
+            <!-- Center Luxury Gold Foil Emblem (烫金品牌徽标) -->
+            <view class="cup-emblem">
+              <view class="emblem-crest">
+                <text class="emblem-icon">🍸</text>
+                <text class="emblem-title">AFTERPARTY</text>
+              </view>
+              <view class="gold-waist-ribbon"></view>
+            </view>
+
+            <!-- Bottom Brushed Gold Base Lip (底座金箍) -->
+            <view class="gold-base-lip"></view>
+          </view>
+
+          <!-- Cup Interior Mouth Depth Shadow (Revealed when lifted) -->
+          <view v-if="lidProgress > 0.05" class="cup-mouth-shadow"></view>
         </view>
       </view>
 
-      <!-- Privacy Status Hint Tag -->
-      <view class="privacy-badge">
-        <text class="badge-dot" :class="{ 'dot-safe': lidProgress === 0, 'dot-open': lidProgress > 0 }"></text>
-        <text class="badge-text">
-          {{ lidProgress === 0 ? '🔒 骰盅已盖严 · 旁人无法偷看' : (lidProgress >= 0.8 ? '🔓 骰盅已全开 · 公开对质' : '👀 偷瞄中 · 松手自动落盖') }}
+      <!-- Privacy Status Tag -->
+      <view class="privacy-status-badge">
+        <view class="badge-dot" :class="{ 'dot-safe': lidProgress === 0, 'dot-open': lidProgress > 0 }"></view>
+        <text class="status-desc">
+          {{ lidProgress === 0 ? '🔒 骰盅已盖严 · 旁人无法偷看' : (lidProgress >= 0.75 ? '🔓 骰盅已全开 · 公开对质' : '👀 偷瞄中 · 松手自动落盖') }}
         </text>
       </view>
     </view>
@@ -103,32 +135,41 @@
         <view class="counter-pill">
           <text class="pill-label">骰子数量</text>
           <view class="counter-actions">
-            <button class="step-btn" @tap="changeDiceCount(-1)" :disabled="diceCount <= 1">-</button>
+            <view class="step-btn" :class="{ 'is-disabled': diceCount <= 1 }" hover-class="btn-hover" @tap="changeDiceCount(-1)">
+              <text class="step-icon">-</text>
+            </view>
             <text class="count-val">{{ diceCount }} 颗</text>
-            <button class="step-btn" @tap="changeDiceCount(1)" :disabled="diceCount >= 12">+</button>
+            <view class="step-btn" :class="{ 'is-disabled': diceCount >= 12 }" hover-class="btn-hover" @tap="changeDiceCount(1)">
+              <text class="step-icon">+</text>
+            </view>
           </view>
         </view>
 
         <!-- Sort / Scatter Toggle -->
-        <button class="sort-toggle-btn" :class="{ 'is-active': isSorted }" @tap="toggleSort">
+        <view class="sort-toggle-btn" :class="{ 'is-active': isSorted }" hover-class="btn-hover" @tap="toggleSort">
           <text class="sort-icon">{{ isSorted ? '📐' : '🎲' }}</text>
           <text class="sort-text">{{ isSorted ? '已理骰子' : '一键理骰' }}</text>
-        </button>
+        </view>
       </view>
 
       <!-- Row 2: Action Buttons (Peek / Shake / Open) -->
       <view class="action-row">
-        <!-- Toggle Lid Button -->
-        <button class="btn-secondary peek-btn" @tap="toggleLid">
-          <text class="action-icon">{{ lidProgress > 0.5 ? '🔒' : '👁️' }}</text>
-          <text class="action-text">{{ lidProgress > 0.5 ? '盖上' : '开盅' }}</text>
-        </button>
+        <!-- Toggle Lid Button (Use view to completely eliminate WeChat button clipping) -->
+        <view class="peek-action-btn" hover-class="btn-hover" @tap="toggleLid">
+          <text class="peek-action-icon">{{ lidProgress > 0.5 ? '🔒' : '👁️' }}</text>
+          <text class="peek-action-label">{{ lidProgress > 0.5 ? '盖上' : '开盅' }}</text>
+        </view>
 
         <!-- Big Shake Button -->
-        <button class="btn-primary shake-btn" :disabled="isShaking" @tap="rollDice">
+        <view
+          class="btn-primary shake-action-btn"
+          :class="{ 'is-disabled': isShaking }"
+          hover-class="btn-hover"
+          @tap="rollDice"
+        >
           <text class="shake-icon">🤹</text>
           <text class="shake-text">{{ isShaking ? '正在摇骰...' : '摇一摇 (或晃动手机)' }}</text>
-        </button>
+        </view>
       </view>
 
       <!-- Shake Motion Sensor Status Note -->
@@ -174,9 +215,9 @@ let lastShakeTimestamp = 0;
 // Dynamic die sizing based on count
 const dieSize = computed(() => {
   if (diceCount.value <= 4) return 56;
-  if (diceCount.value <= 6) return 50;
-  if (diceCount.value <= 9) return 44;
-  return 38;
+  if (diceCount.value <= 6) return 48;
+  if (diceCount.value <= 9) return 42;
+  return 36;
 });
 
 // Tally Summary (e.g. "3个4 · 2个1")
@@ -187,30 +228,36 @@ const tallySummary = computed(() => {
   });
 
   const parts = Object.entries(counts)
-    .sort((a, b) => Number(b[1]) - Number(a[1]) || Number(b[0]) - Number(a[0]))
+    .sort((a, b) => Number(b[1]) - Number(a[1]) || Number(a[0]) - Number(b[0]))
     .map(([val, count]) => `${count}个${val}`);
 
   return parts.join(' · ') || '暂无骰子';
+});
+
+// Cup Transform Style
+const cupTransformStyle = computed(() => {
+  if (isShaking.value) {
+    return ''; // Keyframe animation handles transform during shake
+  }
+  return `translateY(-${lidProgress.value * 115}%)`;
 });
 
 // Generate fresh dice with random points, positions and rotations
 function generateDiceValues(count: number): DieData[] {
   const newDice: DieData[] = [];
   
-  // Arrange in varied positions inside circular/oval tray
   for (let i = 0; i < count; i++) {
-    // Random angle & radius distribution for organic look
-    const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.5 - 0.25);
-    const radius = 25 + Math.random() * 45; // percentage distance from center
+    const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.6 - 0.3);
+    const radius = 22 + Math.random() * 42;
     
     const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius * 0.75; // slightly squished Y for perspective
+    const y = Math.sin(angle) * radius * 0.72;
 
     newDice.push({
       value: Math.floor(Math.random() * 6) + 1,
       rotation: Math.floor(Math.random() * 50) - 25,
       xPercent: Math.max(-42, Math.min(42, x)),
-      yPercent: Math.max(-40, Math.min(40, y)),
+      yPercent: Math.max(-38, Math.min(38, y)),
     });
   }
   return newDice;
@@ -219,7 +266,6 @@ function generateDiceValues(count: number): DieData[] {
 // Position style for each die
 function getDieStyle(die: DieData, index: number) {
   if (isSorted.value) {
-    // Aligned neatly in a grid
     return {};
   }
   return {
@@ -233,23 +279,20 @@ function rollDice() {
   isShaking.value = true;
 
   // Sound effect
-  diceSound.playShakeSequence(750);
+  diceSound.playShakeSequence(800);
 
   // Native Haptic Vibration
   try {
-    uni.vibrateShort({
-      success: () => {},
-      fail: () => {},
-    });
+    uni.vibrateShort({ success: () => {}, fail: () => {} });
     setTimeout(() => {
       uni.vibrateShort({ success: () => {}, fail: () => {} });
-    }, 200);
+    }, 220);
     setTimeout(() => {
       uni.vibrateShort({ success: () => {}, fail: () => {} });
-    }, 450);
+    }, 480);
   } catch (e) {}
 
-  // If lid was open, smoothly close it upon shaking to maintain secret
+  // If lid was open, smoothly close it upon shaking to maintain secrecy
   if (lidProgress.value > 0) {
     lidProgress.value = 0;
   }
@@ -261,7 +304,7 @@ function rollDice() {
 
     // Send quiet background stats telemetry
     recordStats('roll', diceCount.value);
-  }, 700);
+  }, 750);
 }
 
 // Change dice count
@@ -277,10 +320,8 @@ function changeDiceCount(delta: number) {
 function toggleSort() {
   isSorted.value = !isSorted.value;
   if (isSorted.value) {
-    // Sort array by value ascending
     dice.value.sort((a, b) => a.value - b.value);
   } else {
-    // Regenerate scatter positions
     dice.value = dice.value.map(d => ({
       ...d,
       rotation: Math.floor(Math.random() * 50) - 25,
@@ -297,8 +338,7 @@ function toggleLid() {
 
 // Handle tap on tray
 function handleTrayTap() {
-  if (lidProgress.value >= 0.8) {
-    // Tap to close if open
+  if (lidProgress.value >= 0.75) {
     lidProgress.value = 0;
   }
 }
@@ -317,7 +357,7 @@ function onTouchMove(e: TouchEvent) {
   const deltaY = currentY - touchStartY.value;
   
   // Dragging upward (negative deltaY) increases lidProgress
-  const dragSensitivity = 0.004; // 250px pull = 100%
+  const dragSensitivity = 0.004;
   let newProgress = startLidProgress.value - (deltaY * dragSensitivity);
   newProgress = Math.max(0, Math.min(1, newProgress));
 
@@ -329,8 +369,6 @@ function onTouchEnd() {
   isDragging.value = false;
 
   // Peek Threshold Decision:
-  // If user was peeking (< 0.55), release springs back to 0 (Privacy Seal).
-  // If user dragged high (>= 0.55), snap to 1.0 (Locked Open).
   if (startLidProgress.value === 0) {
     if (lidProgress.value >= 0.55) {
       lidProgress.value = 1;
@@ -338,7 +376,6 @@ function onTouchEnd() {
       lidProgress.value = 0;
     }
   } else {
-    // Was open, dragging down
     if (lidProgress.value <= 0.45) {
       lidProgress.value = 0;
     } else {
@@ -384,7 +421,6 @@ function handleAccelerometerData(res: { x: number; y: number; z: number }) {
 
   const totalMovement = deltaX + deltaY + deltaZ;
 
-  // Threshold for phone shake
   if (totalMovement > 2.4) {
     lastShakeTimestamp = now;
     rollDice();
@@ -428,12 +464,13 @@ onUnmounted(() => {
 <style scoped>
 .dice-arena {
   min-height: 100vh;
-  background: radial-gradient(circle at 50% 20%, #151A2E 0%, #0B0E17 100%);
+  background: radial-gradient(circle at 50% 15%, #161A2B 0%, #0A0D16 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: calc(var(--status-bar-height, 20px) + 12px) 16px 28px 16px;
+  padding: calc(var(--status-bar-height, 20px) + 8px) 16px 24px 16px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Top Navigation Bar */
@@ -441,8 +478,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  margin-bottom: 12px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
 }
 
 .nav-btn {
@@ -454,8 +491,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 0;
-  line-height: 1.2;
+  cursor: pointer;
+}
+
+.btn-hover {
+  opacity: 0.8;
+  transform: scale(0.97);
 }
 
 .btn-icon {
@@ -503,8 +544,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  padding: 0;
+  cursor: pointer;
 }
 
 .icon-btn.is-muted {
@@ -516,73 +556,96 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-/* Main Dice Cup Section */
-.cup-section {
+/* ================= 3D Dice Cup & Arena ================= */
+.stage-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 10px 0;
+  margin: 6px 0;
   position: relative;
 }
 
-.dice-cup-box {
-  width: 310px;
-  height: 310px;
+.table-shadow {
+  position: absolute;
+  width: 280px;
+  height: 35px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.85) 0%, transparent 75%);
+  bottom: 45px;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.table-shadow.shadow-active {
+  transform: scale(1.15);
+  opacity: 0.6;
+}
+
+/* Outer Felt Tray Base */
+.felt-tray-base {
+  width: 300px;
+  height: 300px;
   position: relative;
-  border-radius: 40px;
-  box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.8),
-    0 0 30px rgba(0, 245, 160, 0.15);
-  overflow: hidden;
-}
-
-/* Shaking Rumble Animation */
-.is-shaking {
-  animation: cupRumble 0.12s infinite alternate ease-in-out;
-}
-
-@keyframes cupRumble {
-  0% { transform: translate(-3px, -2px) rotate(-1.5deg); }
-  50% { transform: translate(3px, 2px) rotate(1.5deg); }
-  100% { transform: translate(-2px, 3px) rotate(-0.5deg); }
-}
-
-/* Base Velvet Tray */
-.tray-felt {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 50% 50%, #0F382E 0%, #061B15 80%, #030E0B 100%);
-  border: 6px solid #1A2621;
-  border-radius: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  box-shadow: inset 0 6px 30px rgba(0, 0, 0, 0.9);
 }
 
-.felt-ring {
+/* Tray Outer Metallic Bezel Ring */
+.tray-bezel {
+  width: 100%;
+  height: 100%;
+  border-radius: 46px;
+  background: linear-gradient(145deg, #2D2214 0%, #15110B 50%, #0A0805 100%);
+  border: 5px solid #5A4323;
+  box-shadow: 
+    0 18px 45px rgba(0, 0, 0, 0.95),
+    inset 0 2px 4px rgba(255, 215, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Tray Green Velvet Felt Interior */
+.tray-velvet {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 45%, #064E3B 0%, #032E23 70%, #011C15 100%);
+  border-radius: 38px;
+  box-shadow: 
+    inset 0 10px 28px rgba(0, 0, 0, 0.9),
+    inset 0 0 15px rgba(0, 0, 0, 0.6);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 245, 160, 0.15);
+}
+
+.felt-stitch-ring {
   position: absolute;
-  width: 82%;
-  height: 82%;
-  border-radius: 50%;
-  border: 1px dashed rgba(0, 245, 160, 0.2);
+  width: 86%;
+  height: 86%;
+  border-radius: 30px;
+  border: 1px dashed rgba(255, 215, 0, 0.25);
   pointer-events: none;
 }
 
-/* Dice Scatter Zone */
-.dice-scatter-zone {
-  width: 80%;
-  height: 80%;
+/* Dice Zone */
+.dice-zone {
+  width: 82%;
+  height: 82%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
-.dice-scatter-zone.is-sorted {
+.dice-zone.is-sorted {
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -595,7 +658,7 @@ onUnmounted(() => {
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dice-scatter-zone.is-sorted .die-wrapper {
+.dice-zone.is-sorted .die-wrapper {
   position: static;
   transform: none !important;
 }
@@ -604,127 +667,244 @@ onUnmounted(() => {
 .tally-pill {
   position: absolute;
   bottom: 12px;
-  padding: 4px 14px;
+  padding: 5px 14px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(0, 245, 160, 0.4);
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(0, 245, 160, 0.5);
 }
 
 .tally-text {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   color: #00F5A0;
 }
 
-/* Sliding Cup Lid */
-.cup-lid {
+/* ================= 3D Realistic Dice Cup Body ================= */
+.cup-3d {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -8px;
+  left: 12px;
+  right: 12px;
+  height: 316px;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   will-change: transform;
+  filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.9));
 }
 
-.cup-lid.is-animating {
+.cup-3d.is-animating {
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.lid-body {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(160deg, #1E2333 0%, #111420 50%, #0A0C14 100%);
-  border-radius: 40px;
-  border: 3px solid rgba(255, 215, 0, 0.4);
+/* Energetic 3D Cup Shake Animation */
+.cup-3d.is-shaking {
+  animation: realisticDiceShake 0.12s infinite alternate ease-in-out;
+}
+
+@keyframes realisticDiceShake {
+  0% {
+    transform: translateY(-22px) rotate(-14deg) scale(1.04);
+  }
+  30% {
+    transform: translateY(-8px) rotate(12deg) scale(1.02);
+  }
+  60% {
+    transform: translateY(-26px) rotate(-10deg) scale(1.05);
+  }
+  100% {
+    transform: translateY(-12px) rotate(14deg) scale(1.03);
+  }
+}
+
+/* Cup Top Grip Knob (金顶把手) */
+.cup-knob {
+  width: 64px;
+  height: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.knob-cap {
+  width: 50px;
+  height: 14px;
+  border-radius: 10px 10px 3px 3px;
+  background: linear-gradient(135deg, #FFE57F 0%, #D4AF37 45%, #8C6D15 100%);
   box-shadow: 
-    0 15px 35px rgba(0, 0, 0, 0.9),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    0 -2px 6px rgba(255, 215, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.knob-ring {
+  width: 36px;
+  height: 6px;
+  background: linear-gradient(90deg, #5A4323, #FFE57F, #5A4323);
+  border-radius: 2px;
+}
+
+/* Cup Body (Tapered 3D Bell Silhouette) */
+.cup-body {
+  width: 100%;
+  flex: 1;
+  /* 3D Cylindrical leather & metallic lighting gradient */
+  background: linear-gradient(
+    90deg,
+    #10131C 0%,
+    #252C3D 14%,
+    #424D68 32%,
+    #222838 58%,
+    #0E1118 84%,
+    #191E2A 100%
+  );
+  border-radius: 36px 36px 20px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 16px 20px 16px;
+  padding: 10px 0 0 0;
+  position: relative;
   box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: 
+    inset 0 3px 5px rgba(255, 255, 255, 0.25),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.9);
 }
 
-.lid-rim {
-  position: absolute;
-  top: 8px;
-  left: 14px;
-  right: 14px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6), transparent);
+/* Top Gold Collar */
+.gold-collar {
+  width: 90%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #7A5C1B 0%, #FFE57F 30%, #D4AF37 60%, #7A5C1B 100%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Handle Grips */
-.lid-handle {
+/* Indicator & Grip Grooves */
+.cup-indicator-panel {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   align-items: center;
-  margin-top: 6px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.grip-line {
-  width: 44px;
+.grip-grooves {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.groove-line {
+  width: 60px;
   height: 3px;
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
   border-radius: 2px;
 }
 
-.lid-indicator {
+.peek-hint-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.hint-arrow {
-  font-size: 20px;
-  animation: bounceHint 1.2s infinite ease-in-out;
+.hint-arrow-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 
-@keyframes bounceHint {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
-.hint-label {
+.hint-main-text {
   font-size: 11px;
-  color: #A0AEC0;
-  font-weight: 500;
-  text-align: center;
+  font-weight: 700;
+  color: #E2E8F0;
+  margin-top: 3px;
 }
 
-.lid-logo {
+.hint-sub-text {
+  font-size: 9px;
+  color: #00F5A0;
+  margin-top: 1px;
+}
+
+/* Center Emblem */
+.cup-emblem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.emblem-crest {
   display: flex;
   align-items: center;
   gap: 6px;
-  opacity: 0.6;
+  padding: 4px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
-.logo-emoji {
+.emblem-icon {
   font-size: 16px;
 }
 
-.logo-brand {
-  font-size: 11px;
-  font-weight: 800;
+.emblem-title {
+  font-size: 12px;
+  font-weight: 900;
   letter-spacing: 2px;
-  color: #E2E8F0;
+  background: linear-gradient(135deg, #FFE57F 0%, #D4AF37 50%, #FFB800 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-waist-ribbon {
+  width: 82%;
+  height: 2px;
+  margin-top: 8px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.5), transparent);
+}
+
+/* Bottom Brushed Gold Lip */
+.gold-base-lip {
+  width: 100%;
+  height: 12px;
+  background: linear-gradient(90deg, #664B14 0%, #FFE57F 25%, #D4AF37 50%, #FFE57F 75%, #664B14 100%);
+  border-radius: 0 0 20px 20px;
+  box-shadow: 
+    0 -1px 3px rgba(0, 0, 0, 0.6),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Cup Interior Mouth Shadow when lifted */
+.cup-mouth-shadow {
+  width: 96%;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 80%);
+  margin-top: -6px;
+  pointer-events: none;
 }
 
 /* Privacy Status Tag */
-.privacy-badge {
+.privacy-status-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 14px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 6px 14px;
+  gap: 7px;
+  margin-top: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .badge-dot {
@@ -743,18 +923,18 @@ onUnmounted(() => {
   box-shadow: 0 0 8px #FFB800;
 }
 
-.badge-text {
+.status-desc {
   font-size: 12px;
   color: #CBD5E0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Bottom Controls Section */
+/* ================= Bottom Controls Section ================= */
 .controls-section {
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 /* Settings Row */
@@ -792,21 +972,23 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: rgba(255, 255, 255, 0.12);
   color: #FFFFFF;
-  font-size: 16px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  margin: 0;
-  line-height: 1;
+  cursor: pointer;
 }
 
-.step-btn:disabled {
+.step-btn.is-disabled {
   opacity: 0.3;
+  pointer-events: none;
+}
+
+.step-icon {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .count-val {
@@ -826,8 +1008,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   color: #E2E8F0;
-  margin: 0;
-  line-height: 1.2;
+  cursor: pointer;
 }
 
 .sort-toggle-btn.is-active {
@@ -852,48 +1033,60 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.peek-btn {
-  width: 90px;
+/* Left Peek Action Button: Styled as a custom view, completely immune to WeChat button font-clipping */
+.peek-action-btn {
+  width: 86px;
   height: 52px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: 14px;
-  margin: 0;
-  padding: 0;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.action-icon {
+.peek-action-icon {
   font-size: 18px;
+  line-height: 1;
 }
 
-.action-text {
+.peek-action-label {
   font-size: 12px;
   font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
 }
 
-.shake-btn {
+/* Shake Action Button */
+.shake-action-btn {
   flex: 1;
   height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 16px;
-  font-weight: 800;
-  margin: 0;
   border-radius: 14px;
+  cursor: pointer;
+}
+
+.shake-action-btn.is-disabled {
+  opacity: 0.65;
+  pointer-events: none;
 }
 
 .shake-icon {
   font-size: 20px;
+  line-height: 1;
 }
 
 .shake-text {
   font-size: 15px;
   font-weight: 800;
+  line-height: 1;
 }
 
 /* Accelerometer tip */
