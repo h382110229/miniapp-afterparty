@@ -174,6 +174,15 @@ function adjustSeats(delta: number) {
 }
 
 function startGame() {
+  const seatedCount = roomStore.currentRoom?.seats.filter(s => !!s.user).length || 0;
+  if (seatedCount < 2) {
+    uni.showToast({
+      title: '至少需要2位玩家入座才能开局！请分享邀请好友入座',
+      icon: 'none',
+      duration: 3000,
+    });
+    return;
+  }
   roomStore.startGame();
 }
 </script>

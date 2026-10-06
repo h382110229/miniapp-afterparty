@@ -10,8 +10,11 @@ class SocketService {
   private reconnectTimer: any = null;
   private url: string = '';
 
+  private isConnecting = false;
+
   public connect(customUrl?: string): void {
-    if (this.isConnected && this.socketTask) return;
+    if (this.isConnected) return;
+    if (this.isConnecting) return;
 
     // Detect endpoint
     if (customUrl) {
@@ -31,49 +34,58 @@ class SocketService {
     }
 
     console.log(`[SocketService] Connecting to ${this.url}...`);
+    this.isConnecting = true;
 
-    this.socketTask = uni.connectSocket({
-      url: this.url,
-      complete: () => {},
-    });
+    try {
+      this.socketTask = uni.connectSocket({
+        url: this.url,
+        complete: () => {},
+      });
 
-    this.socketTask.onOpen(() => {
-      console.log('[SocketService] Connected successfully');
-      this.isConnected = true;
-      if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-      }
-
-      // Flush queue
-      while (this.pendingQueue.length > 0) {
-        const action = this.pendingQueue.shift();
-        if (action) this.send(action);
-      }
-    });
-
-    this.socketTask.onMessage((res: any) => {
-      try {
-        const data = JSON.parse(res.data) as ServerEvent;
-        for (const handler of this.handlers) {
-          handler(data);
+      this.socketTask.onOpen(() => {
+        console.log('[SocketService] Connected successfully');
+        this.isConnected = true;
+        this.isConnecting = false;
+        if (this.reconnectTimer) {
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = null;
         }
-      } catch (err) {
-        console.error('[SocketService] Error parsing message:', err);
-      }
-    });
 
-    this.socketTask.onClose(() => {
-      console.warn('[SocketService] Socket closed. Reconnecting in 3s...');
-      this.isConnected = false;
-      this.socketTask = null;
-      this.scheduleReconnect();
-    });
+        // Flush queue
+        while (this.pendingQueue.length > 0) {
+          const action = this.pendingQueue.shift();
+          if (action) this.send(action);
+        }
+      });
 
-    this.socketTask.onError((err: any) => {
-      console.error('[SocketService] Socket error:', err);
-      this.isConnected = false;
-    });
+      this.socketTask.onMessage((res: any) => {
+        try {
+          const data = JSON.parse(res.data) as ServerEvent;
+          for (const handler of this.handlers) {
+            handler(data);
+          }
+        } catch (err) {
+          console.error('[SocketService] Error parsing message:', err);
+        }
+      });
+
+      this.socketTask.onClose(() => {
+        console.warn('[SocketService] Socket closed. Reconnecting in 3s...');
+        this.isConnected = false;
+        this.isConnecting = false;
+        this.socketTask = null;
+        this.scheduleReconnect();
+      });
+
+      this.socketTask.onError((err: any) => {
+        console.error('[SocketService] Socket error:', err);
+        this.isConnected = false;
+        this.isConnecting = false;
+      });
+    } catch (err) {
+      this.isConnecting = false;
+      console.error('[SocketService] connectSocket exception:', err);
+    }
   }
 
   private scheduleReconnect(): void {
@@ -91,13 +103,22 @@ class SocketService {
       return;
     }
 
-    this.socketTask.send({
-      data: JSON.stringify(action),
-      fail: (err: any) => {
-        console.error('[SocketService] Send failed:', err);
-        this.pendingQueue.push(action);
-      },
-    });
+    try {
+      this.socketTask.send({
+        data: JSON.stringify(action),
+        fail: (err: any) => {
+          console.warn('[SocketService] Send failed, re-queueing action:', action.type, err?.errMsg);
+          this.pendingQueue.push(action);
+          if (err?.errMsg && err.errMsg.includes('not OPEN')) {
+            this.isConnected = false;
+            this.connect(this.url);
+          }
+        },
+      });
+    } catch (err) {
+      console.error('[SocketService] Send exception:', err);
+      this.pendingQueue.push(action);
+    }
   }
 
   public on(handler: MessageHandler): () => void {
