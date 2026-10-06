@@ -48,15 +48,22 @@
       </view>
     </view>
 
-    <!-- Coming Soon Games -->
-    <view class="game-card glass-panel is-disabled">
+    <!-- Game Card: Liar's Dice (New in 2.0.0) -->
+    <view class="game-card glass-panel neon-glow-gold">
       <view class="game-header">
-        <view class="badge-pending">即将推出</view>
-        <text class="game-tag">多人互动</text>
+        <view class="badge-active badge-gold">2.0.0 推荐</view>
+        <text class="game-tag">实体替代 · 零网络延迟</text>
       </view>
       <view class="game-body">
         <text class="game-name">酒吧吹牛骰 (Liar's Dice)</text>
-        <text class="game-desc">经典大话骰摇盅，心理博弈炸弹，酒吧包厢必备神器。</text>
+        <text class="game-desc">
+          聚会开喝神器！上滑按住偷瞄、松手自动落盖防偷窥。真实物理摇一摇、碰撞声效与一键理骰。
+        </text>
+      </view>
+      <view class="action-buttons">
+        <button class="btn-primary start-dice-btn" @tap="goToDiceGame">
+          <text class="btn-text">🎲 立即开玩 (免建房)</text>
+        </button>
       </view>
     </view>
 
@@ -134,6 +141,12 @@ const isCreating = ref(false);
 
 function openCreateModal(gameType: string) {
   showCreateModal.value = true;
+}
+
+function goToDiceGame() {
+  uni.navigateTo({
+    url: '/pages/game/dice',
+  });
 }
 
 async function confirmCreateRoom() {
@@ -341,6 +354,11 @@ function getApiUrl(path: string): string {
   border-radius: 8px;
 }
 
+.badge-gold {
+  background: linear-gradient(135deg, #FFD700, #FF9500);
+  color: #0B0E17;
+}
+
 .badge-pending {
   background: rgba(255, 255, 255, 0.1);
   color: #94A3B8;
@@ -378,6 +396,14 @@ function getApiUrl(path: string): string {
 .create-btn, .join-btn {
   flex: 1;
   height: 44px;
+}
+
+.start-dice-btn {
+  width: 100%;
+  height: 44px;
+  background: linear-gradient(135deg, #FFD700 0%, #FF8800 100%);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.35);
+  color: #0B0E17;
 }
 
 .btn-text {

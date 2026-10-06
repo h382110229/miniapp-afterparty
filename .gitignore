@@ -1,5 +1,4 @@
 node_modules
-dist
 .env
 .env.local
 *.log
@@ -12,7 +11,8 @@ dist
 *.sln
 *.sw?
 unpackage/
+packages/*/dist
+apps/gateway/dist
+apps/game-*/dist
 apps/client/dist/dev
 apps/client/dist/build/mp-weixin
-!apps/client/dist/build/h5
-

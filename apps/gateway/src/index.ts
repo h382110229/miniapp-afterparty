@@ -144,6 +144,56 @@ async function main() {
     return { room };
   });
 
+  // Dice Game Telemetry & Stats API
+  let localDiceRolls = 0;
+  let localDiceSessions = 0;
+
+  server.post('/api/stats/dice', async (req) => {
+    const body = (req.body as any) || {};
+    const { action = 'roll', count = 1, userId } = body;
+
+    if (pubRedis && pubRedis.status === 'ready') {
+      try {
+        if (action === 'roll') {
+          await pubRedis.incrby('afterparty:stats:dice:rolls', count);
+        } else if (action === 'session') {
+          await pubRedis.incr('afterparty:stats:dice:sessions');
+        }
+        if (userId) {
+          await pubRedis.sadd('afterparty:stats:dice:users', userId);
+        }
+      } catch (e) {
+        // fallback to in-memory counter
+      }
+    }
+
+    if (action === 'roll') localDiceRolls += count;
+    else if (action === 'session') localDiceSessions += 1;
+
+    return { ok: true, timestamp: Date.now() };
+  });
+
+  server.get('/api/stats/dice', async () => {
+    let rolls = localDiceRolls;
+    let sessions = localDiceSessions;
+    let users = 0;
+    if (pubRedis && pubRedis.status === 'ready') {
+      try {
+        const [r, s, u] = await Promise.all([
+          pubRedis.get('afterparty:stats:dice:rolls'),
+          pubRedis.get('afterparty:stats:dice:sessions'),
+          pubRedis.scard('afterparty:stats:dice:users'),
+        ]);
+        if (r) rolls = parseInt(r, 10);
+        if (s) sessions = parseInt(s, 10);
+        users = u || 0;
+      } catch (e) {
+        // fallback to in-memory
+      }
+    }
+    return { rolls, sessions, users, timestamp: Date.now() };
+  });
+
   try {
     await server.listen({ port: PORT, host: HOST });
     console.log(`[AfterParty Gateway] Listening on http://${HOST}:${PORT}`);

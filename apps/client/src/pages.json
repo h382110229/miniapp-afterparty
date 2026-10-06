@@ -26,6 +26,15 @@
         "navigationBarTextStyle": "white",
         "backgroundColor": "#0B0E17"
       }
+    },
+    {
+      "path": "pages/game/dice",
+      "style": {
+        "navigationBarTitleText": "酒吧大话骰",
+        "navigationBarBackgroundColor": "#0B0E17",
+        "navigationBarTextStyle": "white",
+        "backgroundColor": "#0B0E17"
+      }
     }
   ],
   "globalStyle": {

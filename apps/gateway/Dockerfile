@@ -21,6 +21,7 @@ COPY packages/shared-types/package.json ./packages/shared-types/
 COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
 COPY apps/gateway/package.json ./apps/gateway/
 COPY --from=builder /app/apps/gateway/dist ./apps/gateway/dist
+COPY apps/client/dist/build/h5 ./apps/client/dist/build/h5
 
 RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile=false
 
