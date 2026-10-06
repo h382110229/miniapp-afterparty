@@ -95,6 +95,7 @@ export function handleGameAction(event: {
         ? 'bonus_turn' 
         : (actionResult.drinksPenalty > 0 ? 'drink_penalty' : 'reveal');
       
+      // Step 1: Broadcast revealed state with animation data for clients to play 3D flip & flight
       broadcastGameState(roomId, state, { type: animType, data: actionResult });
     } catch (err: any) {
       console.error(`[CardHighLow] Make guess error: ${err.message}`);

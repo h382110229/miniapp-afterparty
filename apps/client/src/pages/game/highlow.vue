@@ -282,6 +282,7 @@ const resultTitle = computed(() => {
 
 function onSelectPublicCard(idx: number) {
   if (!highLowStore.isMyTurn || highLowStore.gameState?.phase !== 'selecting_target') return;
+  if (highLowStore.gameState?.activeTargetIndex === idx) return; // Prevent duplicate selection jitter
   highLowStore.selectTarget(idx);
 }
 
@@ -487,8 +488,11 @@ function confirmExit() {
 
 .card-cell {
   position: relative;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   border-radius: 14px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .card-cell.is-selectable {
@@ -502,10 +506,12 @@ function confirmExit() {
 }
 
 .card-cell.is-selectable:active {
-  transform: scale(0.92) !important;
+  transform: scale(0.94) !important;
 }
 
+/* Stop gentle-float immediately when card becomes active target to eliminate animation conflict flicker */
 .card-cell.is-active-target {
+  animation: none !important;
   transform: translateY(-8px) scale(1.04);
   box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
   border-radius: 12px;
@@ -594,6 +600,10 @@ function confirmExit() {
 /* Controls */
 .controls-panel {
   margin-top: 10px;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .turn-prompt-banner {

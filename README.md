@@ -98,43 +98,122 @@ pnpm dev:client:mp
 
 ---
 
-## 🚢 OCI ARM 实例部署指南
+## 🚢 生产部署与发布 SOP 标准操作指南
 
-### 1. Cloudflare DNS 解析
-在 Cloudflare 控制台中添加一条 DNS A 记录：
-- **Name**: `afterparty.miniapp`
-- **IPv4 Address**: `163.192.63.236`
-- **Proxy status**: Proxied 或 DNS-only 均可。
+本系统采用 **后端微服务容器化 + 宿主机共享基础设施 (`app_infra-net`) + Caddy 反向代理 + 微信开发者工具原生打包** 的标准发布流水线。
 
-### 2. 宿主机 Caddyfile 追加反代配置
-在宿主机 `/data/app/caddy/Caddyfile` 中追加以下规则：
-```caddy
+---
+
+### 第一阶段：OCI ARM 基础设施与微服务部署 (由 Hermes Agent 执行)
+
+#### 1. 宿主机现有共享公共基础设施确认
+在部署新服务前，必须先确认宿主机已有的共享组件：
+- **公共网络**：`app_infra-net` (包含 postgres、redis、caddy 等公共容器)
+- **公共凭据**：`/data/app/.env` (集中管理 `REDIS_PASSWORD`、`PG_PASSWORD` 等核心密码)
+- **共享 Redis**：主机名 `redis`，端口 `6379`，密码复用自 `/data/app/.env`
+- **共享 PostgreSQL**：主机名 `postgres`，端口 `5432`，为每个应用增量创建独立用户和数据库
+
+#### 2. PostgreSQL 专属库初始化 (幂等脚本)
+```bash
+AP_DB_PASS=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
+
+# 幂等建 role 与 db
+docker exec -i postgres psql -U hawk -d postgres -tc \
+  "SELECT 1 FROM pg_roles WHERE rolname='afterparty'" | grep -q 1 || \
+docker exec -i postgres psql -U hawk -d postgres \
+  -c "CREATE ROLE afterparty WITH LOGIN PASSWORD '${AP_DB_PASS}'"
+
+docker exec -i postgres psql -U hawk -d postgres -tc \
+  "SELECT 1 FROM pg_database WHERE datname='afterparty'" | grep -q 1 || \
+docker exec -i postgres psql -U hawk -d postgres \
+  -c "CREATE DATABASE afterparty OWNER afterparty"
+
+# 带标准规范注释写入集中环境凭据
+cat <<EOF >> /data/app/.env
+
+# AFTERPARTY_DB_PASSWORD
+# 名称: AfterParty 小程序后端数据库密码
+# 创建: $(date +%Y-%m-%d)
+# 有效期: 长期
+# 关联: PG 角色 afterparty / 库 afterparty (postgres 容器)
+# 权限: 仅 afterparty 库 CRUD
+# 用途: /data/app/afterparty 服务连接
+AFTERPARTY_DB_PASSWORD=${AP_DB_PASS}
+EOF
+```
+
+#### 3. 拉取代码并生成应用专属 `.env`
+```bash
+mkdir -p /data/app && cd /data/app
+if [ ! -d "/data/app/afterparty" ]; then
+  git clone https://github.com/h382110229/miniapp-afterparty.git afterparty
+else
+  cd afterparty && git pull origin main
+fi
+cd /data/app/afterparty
+
+# 读取公共 Redis 密码与刚生成的数据库密码
+source /data/app/.env
+
+cat <<EOF > .env
+REDIS_PASSWORD=${REDIS_PASSWORD}
+POSTGRES_DB=afterparty
+POSTGRES_USER=afterparty
+POSTGRES_PASSWORD=${AFTERPARTY_DB_PASSWORD}
+JWT_SECRET=$(openssl rand -hex 24)
+WX_APPID=wxdcb8e15f09e5f219
+WX_APPSECRET=
+EOF
+chmod 600 .env
+```
+
+#### 4. 容器构建与健康检查
+```bash
+docker compose up -d --build
+docker compose ps
+curl -fsS http://127.0.0.1:4000/health
+```
+
+#### 5. Caddyfile 备份与反代热重载
+```bash
+# 变更铁律：先备份再修改
+cp /data/app/caddy/Caddyfile /data/app/caddy/Caddyfile.bak.$(date +%Y%m%d%H%M%S)
+
+if ! grep -q "afterparty.miniapp.hawkren.online" /data/app/caddy/Caddyfile; then
+cat <<'EOF' >> /data/app/caddy/Caddyfile
+
 afterparty.miniapp.hawkren.online {
     reverse_proxy afterparty-gateway:4000
     encode gzip
 }
-```
-热重载使配置生效：
-```bash
+EOF
+fi
+
 docker exec caddy caddy validate --config /etc/caddy/Caddyfile
-docker exec caddy caddy reload  --config /etc/caddy/Caddyfile
+docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+
+# 公网验证
+curl -fsS https://afterparty.miniapp.hawkren.online/health
 ```
 
-### 3. PostgreSQL 数据库初始化
-进入宿主机现有 PostgreSQL 容器：
-```bash
-docker exec -it postgres psql -U hawk -d postgres
-```
-执行建库建用户命令：
-```sql
-CREATE DATABASE afterparty;
-CREATE USER afterparty WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE afterparty TO afterparty;
-```
+---
 
-### 4. 启动微服务容器
-在 `/data/app/afterparty` 目录下创建 `.env` 文件（参考 `.env.example`），然后执行：
+### 第二阶段：微信小程序客户端构建与发布 (微信开发者工具)
+
+#### 1. 本地生产构建
+在本地项目根目录下执行：
 ```bash
-docker compose up -d --build
+pnpm --filter @afterparty/client build:mp-weixin
 ```
-容器将自动加入宿主机的 `app_infra-net`，Caddy 即可无缝路由至 `afterparty-gateway:4000`。
+编译产物输出至：`apps/client/dist/build/mp-weixin`。
+
+#### 2. 微信公众平台服务器域名白名单 (mp.weixin.qq.com)
+确保【开发】->【开发管理】->【开发设置】已登记：
+- `request合法域名`: `https://afterparty.miniapp.hawkren.online`
+- `socket合法域名`: `wss://afterparty.miniapp.hawkren.online`
+
+#### 3. 开发者工具上传与版本发布
+1. 打开 **微信开发者工具**，导入项目目录 `apps/client/dist/build/mp-weixin`；
+2. 点击右上角 **【上传】**，填写版本号与备注；
+3. 打开手机 **“微信小程序助手”** -> **“版本管理”**，将该版本 **“选为体验版”**；
+4. 好友扫码体验版二维码，即刻开始跨端联机对战！
