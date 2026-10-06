@@ -88,7 +88,7 @@
         <view class="cards-grid">
           <view
             v-for="(card, idx) in highLowStore.gameState?.publicCards || []"
-            :key="idx"
+            :key="card ? `${card.suit}_${card.rank}_${idx}` : `slot_${idx}`"
             class="card-cell"
             :class="{
               'is-selectable': highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target',
@@ -101,7 +101,6 @@
               v-if="card"
               :card="card"
               :isFlipped="true"
-              :isSelected="highLowStore.gameState?.activeTargetIndex === idx"
             />
             <view v-else class="empty-card-placeholder">
               <text class="placeholder-text">空位</text>
