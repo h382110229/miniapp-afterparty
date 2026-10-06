@@ -39,20 +39,24 @@
           <text class="pile-label">牌堆</text>
         </view>
 
-        <!-- Current Target vs Drawn Unknown Card -->
+        <!-- Current Target vs Drawn Unknown Card with stable dimensions -->
         <view class="vs-zone">
-          <view v-if="highLowStore.activeTargetCard" class="card-slot target-slot">
+          <view class="card-slot target-slot">
             <text class="slot-title">比对基准牌</text>
-            <PokerCard :card="highLowStore.activeTargetCard" :isFlipped="true" isTarget />
+            <PokerCard v-if="highLowStore.activeTargetCard" :card="highLowStore.activeTargetCard" :isFlipped="true" isTarget />
+            <view v-else class="empty-card-placeholder">
+              <text class="placeholder-text">待选</text>
+            </view>
           </view>
 
-          <view class="vs-divider" v-if="highLowStore.gameState?.phase === 'guessing' || highLowStore.gameState?.drawnCard">
-            <text class="vs-text">VS</text>
+          <view class="vs-divider">
+            <text class="vs-text" :class="{ 'is-active': highLowStore.gameState?.phase === 'guessing' }">VS</text>
           </view>
 
-          <view v-if="highLowStore.gameState?.drawnCard || revealedDrawnCard" class="card-slot drawn-slot">
+          <view class="card-slot drawn-slot">
             <text class="slot-title">摸出的暗牌</text>
             <view
+              v-if="highLowStore.gameState?.drawnCard || revealedDrawnCard"
               class="drawn-anim-wrapper"
               :class="{
                 'animate-flip-reveal': isRevealing,
@@ -64,6 +68,9 @@
                 :isFlipped="isRevealing || isCovering || highLowStore.gameState?.drawnCardRevealed"
                 :isBoundary="(revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 1 || (revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 13"
               />
+            </view>
+            <view v-else class="empty-card-placeholder">
+              <text class="placeholder-text">待摸</text>
             </view>
           </view>
         </view>
