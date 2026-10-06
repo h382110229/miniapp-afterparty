@@ -50,13 +50,21 @@
             <text class="vs-text">VS</text>
           </view>
 
-          <view v-if="highLowStore.gameState?.drawnCard" class="card-slot drawn-slot">
+          <view v-if="highLowStore.gameState?.drawnCard || revealedDrawnCard" class="card-slot drawn-slot">
             <text class="slot-title">摸出的暗牌</text>
-            <PokerCard
-              :card="highLowStore.gameState.drawnCard"
-              :isFlipped="highLowStore.gameState.drawnCardRevealed"
-              :isBoundary="highLowStore.gameState.drawnCard.rank === 1 || highLowStore.gameState.drawnCard.rank === 13"
-            />
+            <view
+              class="drawn-anim-wrapper"
+              :class="{
+                'animate-flip-reveal': isRevealing,
+                'animate-fly-to-cover': isCovering
+              }"
+            >
+              <PokerCard
+                :card="revealedDrawnCard || highLowStore.gameState?.drawnCard"
+                :isFlipped="isRevealing || isCovering || highLowStore.gameState?.drawnCardRevealed"
+                :isBoundary="(revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 1 || (revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 13"
+              />
+            </view>
           </view>
         </view>
       </view>
@@ -77,7 +85,8 @@
             class="card-cell"
             :class="{
               'is-selectable': highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target',
-              'is-active-target': highLowStore.gameState?.activeTargetIndex === idx
+              'is-active-target': highLowStore.gameState?.activeTargetIndex === idx,
+              'is-being-covered': isCovering && coveringTargetIndex === idx
             }"
             @tap="onSelectPublicCard(idx)"
           >
@@ -193,16 +202,48 @@ const highLowStore = useHighLowStore();
 const showResultModal = ref(false);
 const lastResult = ref<ActionResult | null>(null);
 
+// Staged Animation States
+const isRevealing = ref(false);       // Whether the drawn card is flipping
+const isCovering = ref(false);        // Whether the revealed card is flying to cover the public card
+const coveringTargetIndex = ref<number | null>(null);
+const revealedDrawnCard = ref<any>(null);
+
 onLoad((query) => {
   socketService.connect();
 
   socketService.on((event) => {
     if (event.type === 'game:state') {
-      highLowStore.setGameState(event.payload.gameState);
+      // If we are currently playing the reveal animation sequence, defer state override
+      if (isRevealing.value || isCovering.value) {
+        setTimeout(() => {
+          highLowStore.setGameState(event.payload.gameState);
+        }, 1800);
+      } else {
+        highLowStore.setGameState(event.payload.gameState);
+      }
     } else if (event.type === 'game:animation') {
       if (event.payload.data) {
-        lastResult.value = event.payload.data;
-        showResultModal.value = true;
+        const animData = event.payload.data as ActionResult;
+        lastResult.value = animData;
+        revealedDrawnCard.value = animData.drawnCard;
+        coveringTargetIndex.value = highLowStore.gameState?.activeTargetIndex ?? null;
+
+        // Stage 1: Flip & Reveal the drawn card with 3D animation (0ms ~ 800ms)
+        isRevealing.value = true;
+        isCovering.value = false;
+        showResultModal.value = false;
+
+        // Stage 2: Card flies & covers the target public card (800ms ~ 1500ms)
+        setTimeout(() => {
+          isCovering.value = true;
+        }, 800);
+
+        // Stage 3: Show outcome modal after visual animation finishes (1600ms)
+        setTimeout(() => {
+          isRevealing.value = false;
+          isCovering.value = false;
+          showResultModal.value = true;
+        }, 1600);
       }
     } else if (event.type === 'room:state') {
       roomStore.setRoom(event.payload.room);
@@ -440,15 +481,93 @@ function confirmExit() {
 
 .card-cell {
   position: relative;
-  transition: transform 0.2s ease;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 14px;
 }
 
 .card-cell.is-selectable {
   cursor: pointer;
+  animation: gentle-float 2s ease-in-out infinite alternate;
+}
+
+@keyframes gentle-float {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
 }
 
 .card-cell.is-selectable:active {
-  transform: scale(0.95);
+  transform: scale(0.92) !important;
+}
+
+.card-cell.is-active-target {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
+  border-radius: 12px;
+  z-index: 10;
+}
+
+.card-cell.is-being-covered {
+  animation: target-covered-burst 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 20;
+}
+
+@keyframes target-covered-burst {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15) translateY(-10px);
+    filter: brightness(1.6) drop-shadow(0 0 20px #00F5A0);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* Drawn Card Animation Wrapper */
+.drawn-anim-wrapper {
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-flip-reveal {
+  animation: flip-dramatic 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes flip-dramatic {
+  0% {
+    transform: scale(0.9) rotateY(180deg);
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+  }
+  50% {
+    transform: scale(1.18) rotateY(90deg);
+    filter: drop-shadow(0 0 30px rgba(0, 245, 160, 0.9));
+  }
+  100% {
+    transform: scale(1.05) rotateY(0deg);
+    filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.8));
+  }
+}
+
+.animate-fly-to-cover {
+  animation: fly-cover 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes fly-cover {
+  0% {
+    transform: scale(1.05) translateY(0);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.1) translateY(45px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.95) translateY(80px);
+    opacity: 0;
+  }
 }
 
 .empty-card-placeholder {

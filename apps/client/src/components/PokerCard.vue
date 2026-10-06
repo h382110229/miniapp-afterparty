@@ -257,13 +257,28 @@ const displayRank = computed(() => {
 
 /* State highlights */
 .is-selected {
-  transform: translateY(-8px) scale(1.05);
-  filter: drop-shadow(0 0 16px rgba(0, 245, 160, 0.8));
+  transform: translateY(-10px) scale(1.06);
+  filter: drop-shadow(0 0 16px rgba(0, 245, 160, 0.9));
 }
 
 .is-target {
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.9);
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.95);
   border-radius: 12px;
+}
+
+.is-dealing {
+  animation: card-draw 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes card-draw {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.8) rotate(-8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
 }
 
 .is-boundary {
