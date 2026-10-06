@@ -32,7 +32,7 @@
       <view class="circular-tray-base" @tap="handleTrayTap">
         <!-- Outer Leather & Gold Bezel Ring -->
         <view class="tray-outer-bezel">
-          <!-- Deep Casino Emerald Velvet Interior (Round 50%) -->
+          <!-- Deep Casino Emerald Velvet Interior (100% Round) -->
           <view class="tray-velvet-round">
             <!-- Saddle Stitch Circular Thread Ring -->
             <view class="saddle-stitch-ring"></view>
@@ -61,7 +61,7 @@
           </view>
         </view>
 
-        <!-- ================= Authentic 3D Bell-Shaped Dice Cup ================= -->
+        <!-- ================= 3D Bell-Shaped Solid Cup (Completely Opaque) ================= -->
         <view
           class="bell-cup-container"
           :class="{
@@ -80,119 +80,47 @@
             <view class="knob-collar"></view>
           </view>
 
-          <!-- 3D Bell Cup Silhouette SVG & Leather Stitching -->
-          <view class="cup-svg-wrapper">
-            <svg
-              class="cup-svg-render"
-              viewBox="0 0 260 270"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <!-- 3D Cylindrical Light on Obsidian Leather -->
-                <linearGradient id="obsidianLeatherGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#0E121C" />
-                  <stop offset="14%" stop-color="#242C3E" />
-                  <stop offset="34%" stop-color="#465475" />
-                  <stop offset="56%" stop-color="#263044" />
-                  <stop offset="82%" stop-color="#121622" />
-                  <stop offset="100%" stop-color="#1B2232" />
-                </linearGradient>
+          <!-- Cup Top Dome (Round Elliptical Cap) -->
+          <view class="cup-top-dome">
+            <view class="dome-gold-band"></view>
+          </view>
 
-                <!-- Polished Gold Metallic Gradient -->
-                <linearGradient id="richGoldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#7A5A18" />
-                  <stop offset="22%" stop-color="#FFDF73" />
-                  <stop offset="50%" stop-color="#CAA132" />
-                  <stop offset="78%" stop-color="#FFF0A8" />
-                  <stop offset="100%" stop-color="#6F4F13" />
-                </linearGradient>
+          <!-- Cup Tapered Body (Solid 3D Leather & Metallic Silhouette) -->
+          <view class="cup-tapered-body">
+            <!-- Left & Right Saddle Stitch Seams (Stitch UI 经典双马鞍缝线) -->
+            <view class="stitch-seam stitch-left"></view>
+            <view class="stitch-seam stitch-right"></view>
 
-                <!-- Subtle Inner Mouth Shadow -->
-                <radialGradient id="mouthShadowGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="#000000" stop-opacity="0.95" />
-                  <stop offset="80%" stop-color="#000000" stop-opacity="0.4" />
-                  <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-                </radialGradient>
-              </defs>
+            <!-- Mid-Body Golden Waist Band with Rivets -->
+            <view class="gold-waist-belt">
+              <view class="belt-rivet"></view>
+              <view class="belt-rivet"></view>
+              <view class="belt-rivet"></view>
+            </view>
 
-              <!-- Main Bell-Shaped Tapered Cup Silhouette -->
-              <path
-                d="M 38,20 C 65,4 195,4 222,20 L 254,244 C 210,264 50,264 6,244 Z"
-                fill="url(#obsidianLeatherGrad)"
-                stroke="url(#richGoldGrad)"
-                stroke-width="2.5"
-              />
+            <!-- Touch Peek Indicator Ribbon -->
+            <view class="peek-touch-badge">
+              <text class="peek-arrow-icon">{{ lidProgress > 0.5 ? '⬇️' : '⬆️' }}</text>
+              <text class="peek-label-main">
+                {{ lidProgress > 0.5 ? '已掀开 (下滑重新盖严)' : '按住上推偷瞄' }}
+              </text>
+              <text class="peek-label-sub" v-if="lidProgress <= 0.5">
+                (松手自动落盖防偷窥)
+              </text>
+            </view>
 
-              <!-- Top Golden Collar Band -->
-              <path
-                d="M 38,20 C 65,8 195,8 222,20 L 225,30 C 195,18 65,18 35,30 Z"
-                fill="url(#richGoldGrad)"
-              />
-
-              <!-- Left & Right Saddle Stitch Seams (Stitch UI 经典双马鞍缝线) -->
-              <path
-                d="M 46,32 L 20,240"
-                fill="none"
-                stroke="#FFE082"
-                stroke-width="2"
-                stroke-dasharray="4,4"
-                opacity="0.6"
-              />
-              <path
-                d="M 214,32 L 240,240"
-                fill="none"
-                stroke="#FFE082"
-                stroke-width="2"
-                stroke-dasharray="4,4"
-                opacity="0.6"
-              />
-
-              <!-- Mid-Body Golden Waist Band with Rivets -->
-              <path
-                d="M 23,170 C 90,182 170,182 237,170 L 239,180 C 170,192 90,192 21,180 Z"
-                fill="url(#richGoldGrad)"
-              />
-              <circle cx="55" cy="176" r="2.5" fill="#FFF2B2" />
-              <circle cx="130" cy="181" r="2.5" fill="#FFF2B2" />
-              <circle cx="205" cy="176" r="2.5" fill="#FFF2B2" />
-
-              <!-- Heavy Bottom Flanged Gold Rim (底沿厚重包金边) -->
-              <path
-                d="M 6,244 C 50,264 210,264 254,244 L 257,255 C 210,274 50,274 3,255 Z"
-                fill="url(#richGoldGrad)"
-              />
-
-              <!-- Bottom Mouth Shadow (visible as an elliptical cavity when lifted) -->
-              <ellipse
-                v-if="lidProgress > 0.05"
-                cx="130"
-                cy="252"
-                rx="124"
-                ry="12"
-                fill="url(#mouthShadowGrad)"
-              />
-            </svg>
-
-            <!-- Floating Overlay Content on Cup Face -->
-            <view class="cup-face-overlay">
-              <!-- Touch Peek Indicator Ribbon -->
-              <view class="peek-touch-badge">
-                <text class="peek-arrow-icon">{{ lidProgress > 0.5 ? '⬇️' : '⬆️' }}</text>
-                <text class="peek-label-main">
-                  {{ lidProgress > 0.5 ? '已掀开 (下滑重新盖严)' : '按住上推偷瞄' }}
-                </text>
-                <text class="peek-label-sub" v-if="lidProgress <= 0.5">
-                  (松手自动落盖防偷窥)
-                </text>
-              </view>
-
-              <!-- Luxury Embossed Golden Brand Crest -->
-              <view class="embossed-crest">
-                <text class="crest-emoji">🍸</text>
-                <text class="crest-title">AFTERPARTY</text>
-              </view>
+            <!-- Luxury Embossed Golden Brand Crest -->
+            <view class="embossed-crest">
+              <text class="crest-emoji">🍸</text>
+              <text class="crest-title">AFTERPARTY</text>
             </view>
           </view>
+
+          <!-- Bottom Flanged Gold Lip (底座厚实金圈) -->
+          <view class="cup-bottom-lip"></view>
+
+          <!-- Cup Interior Mouth Shadow (Visible when lifted off table) -->
+          <view v-if="lidProgress > 0.05" class="cup-mouth-shadow"></view>
         </view>
       </view>
 
@@ -232,7 +160,7 @@
 
       <!-- Row 2: Action Buttons (Peek / Shake / Open) -->
       <view class="action-row">
-        <!-- Toggle Lid Button (View container without WeChat native clipping) -->
+        <!-- Toggle Lid Button (View container completely immune to WeChat clipping) -->
         <view class="peek-action-btn" hover-class="btn-hover" @tap="toggleLid">
           <text class="peek-action-icon">{{ lidProgress > 0.5 ? '🔒' : '👁️' }}</text>
           <text class="peek-action-label">{{ lidProgress > 0.5 ? '盖上' : '开盅' }}</text>
@@ -327,7 +255,7 @@ function generateDiceValues(count: number): DieData[] {
   for (let i = 0; i < count; i++) {
     // Distribute randomly inside a circle
     const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.6 - 0.3);
-    const radius = 18 + Math.random() * 38; // radius in px
+    const radius = 16 + Math.random() * 38; // radius in px
     
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius * 0.78;
@@ -763,11 +691,11 @@ onUnmounted(() => {
   color: #00F5A0;
 }
 
-/* ================= 3D Bell-Shaped Cup Assembly ================= */
+/* ================= 3D Bell-Shaped Solid Cup (Completely Opaque) ================= */
 .bell-cup-container {
   position: absolute;
-  top: -12px;
-  width: 260px;
+  top: -10px;
+  width: 256px;
   height: 295px;
   z-index: 10;
   display: flex;
@@ -809,7 +737,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   z-index: 5;
-  margin-bottom: -4px;
+  margin-bottom: -3px;
 }
 
 .knob-sphere {
@@ -829,43 +757,104 @@ onUnmounted(() => {
   border-radius: 2px;
 }
 
-/* Cup SVG Wrapper */
-.cup-svg-wrapper {
-  width: 260px;
-  height: 270px;
+/* Cup Top Dome (Elliptical Cap) */
+.cup-top-dome {
+  width: 196px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #4A587A 0%, #20273A 80%, #151A26 100%);
+  border: 2px solid #D4AF37;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  margin-bottom: -16px;
+  z-index: 3;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.cup-svg-render {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+.dome-gold-band {
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 224, 130, 0.8), transparent);
 }
 
-/* Overlay Elements directly placed on the cup front */
-.cup-face-overlay {
-  position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
-  bottom: 24px;
+/* Cup Tapered Body (Solid 100% Opaque Material with 3D Shading) */
+.cup-tapered-body {
+  width: 250px;
+  height: 236px;
+  background: linear-gradient(
+    90deg,
+    #0E121C 0%,
+    #21283A 12%,
+    #42506F 32%,
+    #56678C 48%,
+    #263044 68%,
+    #111520 84%,
+    #1B2232 100%
+  );
+  clip-path: polygon(11% 0%, 89% 0%, 100% 100%, 0% 100%);
+  -webkit-clip-path: polygon(11% 0%, 89% 0%, 100% 100%, 0% 100%);
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  pointer-events: none;
+  padding: 24px 0 14px 0;
   box-sizing: border-box;
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
 }
 
+/* Saddle Stitch Seams */
+.stitch-seam {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-left: 2px dashed rgba(255, 224, 130, 0.65);
+}
+
+.stitch-left {
+  left: 36px;
+}
+
+.stitch-right {
+  right: 36px;
+}
+
+/* Golden Waist Belt with Rivets */
+.gold-waist-belt {
+  width: 88%;
+  height: 8px;
+  background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 25%, #CAA132 50%, #FFF0A8 75%, #6F4F13 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.belt-rivet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, #FFE082 50%, #7A5A18 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Touch Peek Indicator Ribbon */
 .peek-touch-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 6px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
+  padding: 8px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+  margin-top: 6px;
 }
 
 .peek-arrow-icon {
@@ -886,15 +875,16 @@ onUnmounted(() => {
   margin-top: 1px;
 }
 
+/* Luxury Embossed Golden Brand Crest */
 .embossed-crest {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 14px;
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 215, 0, 0.35);
-  margin-bottom: 28px;
+  padding: 4px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  margin-bottom: 8px;
 }
 
 .crest-emoji {
@@ -908,6 +898,27 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #FFE57F 0%, #D4AF37 50%, #FFB800 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Bottom Flanged Gold Lip */
+.cup-bottom-lip {
+  width: 254px;
+  height: 18px;
+  border-radius: 0 0 50% 50% / 0 0 16px 16px;
+  background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 25%, #CAA132 50%, #FFF0A8 75%, #6F4F13 100%);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.9), inset 0 2px 3px rgba(255, 255, 255, 0.7);
+  margin-top: -6px;
+  z-index: 2;
+}
+
+/* Cup Interior Mouth Shadow when lifted */
+.cup-mouth-shadow {
+  width: 240px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 80%);
+  margin-top: -10px;
+  pointer-events: none;
 }
 
 /* Privacy Status Tag */
