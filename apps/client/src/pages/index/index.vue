@@ -139,14 +139,18 @@ function openCreateModal(gameType: string) {
 async function confirmCreateRoom() {
   if (isCreating.value) return;
   isCreating.value = true;
+  console.log('[CreateRoom] Starting create room process...');
 
   try {
     socketService.connect();
     // Ensure valid server JWT token
+    console.log('[CreateRoom] Ensuring auth token...');
     const token = await userStore.ensureAuth(getApiUrl(''));
+    console.log('[CreateRoom] Token acquired:', token ? `${token.substring(0, 10)}...` : 'NONE');
 
     // Register message listener to navigate when room state arrives
     const unsubscribe = socketService.on((event) => {
+      console.log('[CreateRoom] Received socket event:', event.type);
       if (event.type === 'room:state') {
         roomStore.setRoom(event.payload.room);
         unsubscribe();
@@ -159,8 +163,10 @@ async function confirmCreateRoom() {
 
     // Request create room via API or WebSocket
     // For universal H5 and WeChat, call REST endpoint
+    const requestUrl = getApiUrl('/api/room/create');
+    console.log('[CreateRoom] Requesting REST API:', requestUrl);
     const res = await uni.request({
-      url: getApiUrl('/api/room/create'),
+      url: requestUrl,
       method: 'POST',
       header: {
         Authorization: `Bearer ${token || userStore.token}`,
@@ -172,15 +178,26 @@ async function confirmCreateRoom() {
       },
     });
 
+    console.log('[CreateRoom] API response status:', res.statusCode, 'data:', res.data);
     const data = res.data as any;
     if (data.room) {
+      console.log('[CreateRoom] Room created successfully! Navigating to lobby:', data.room.roomCode);
       roomStore.setRoom(data.room);
       roomStore.joinRoom(data.room.roomCode);
       showCreateModal.value = false;
-      uni.navigateTo({ url: `/pages/room/lobby?code=${data.room.roomCode}` });
+      uni.navigateTo({
+        url: `/pages/room/lobby?code=${data.room.roomCode}`,
+        fail: (navErr) => {
+          console.error('[CreateRoom] Navigation failed:', navErr);
+          uni.showToast({ title: `跳转失败: ${navErr.errMsg}`, icon: 'none' });
+        }
+      });
+    } else {
+      uni.showToast({ title: data.error || '开房异常', icon: 'none' });
     }
   } catch (err: any) {
-    uni.showToast({ title: '开房失败，请重试', icon: 'none' });
+    console.error('[CreateRoom] Exception occurred:', err);
+    uni.showToast({ title: `开房失败: ${err.message || '请检查网络'}`, icon: 'none' });
   } finally {
     isCreating.value = false;
   }

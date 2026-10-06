@@ -10,9 +10,10 @@ export const useUserStore = defineStore('user', () => {
     try {
       const cachedToken = uni.getStorageSync('afterparty_token');
       const cachedUser = uni.getStorageSync('afterparty_user');
-      if (cachedToken && cachedUser) {
+      if (cachedToken && !cachedToken.startsWith('mock_token_') && cachedUser) {
         token.value = cachedToken;
         user.value = JSON.parse(cachedUser);
+        console.log('[UserStore] Restored valid session for user:', user.value?.nickname);
         return;
       }
     } catch {
@@ -28,7 +29,9 @@ export const useUserStore = defineStore('user', () => {
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${guestId}`,
       isGuest: true,
     };
-    setUser(guestUser, `mock_token_${guestId}`);
+    user.value = guestUser;
+    token.value = '';
+    console.log('[UserStore] Initialized fresh guest:', guestUser.nickname);
   }
 
   function setUser(newUser: User, newToken: string) {
