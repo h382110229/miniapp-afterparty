@@ -148,21 +148,7 @@ async function confirmCreateRoom() {
     const token = await userStore.ensureAuth(getApiUrl(''));
     console.log('[CreateRoom] Token acquired:', token ? `${token.substring(0, 10)}...` : 'NONE');
 
-    // Register message listener to navigate when room state arrives
-    const unsubscribe = socketService.on((event) => {
-      console.log('[CreateRoom] Received socket event:', event.type);
-      if (event.type === 'room:state') {
-        roomStore.setRoom(event.payload.room);
-        unsubscribe();
-        showCreateModal.value = false;
-        uni.navigateTo({ url: `/pages/room/lobby?code=${event.payload.room.roomCode}` });
-      } else if (event.type === 'room:error') {
-        uni.showToast({ title: event.payload.message, icon: 'none' });
-      }
-    });
-
-    // Request create room via API or WebSocket
-    // For universal H5 and WeChat, call REST endpoint
+    // Request create room via REST endpoint
     const requestUrl = getApiUrl('/api/room/create');
     console.log('[CreateRoom] Requesting REST API:', requestUrl);
     const res = await uni.request({
@@ -183,7 +169,6 @@ async function confirmCreateRoom() {
     if (data.room) {
       console.log('[CreateRoom] Room created successfully! Navigating to lobby:', data.room.roomCode);
       roomStore.setRoom(data.room);
-      roomStore.joinRoom(data.room.roomCode);
       showCreateModal.value = false;
       uni.navigateTo({
         url: `/pages/room/lobby?code=${data.room.roomCode}`,
