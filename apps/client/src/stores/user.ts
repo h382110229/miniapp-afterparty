@@ -53,11 +53,40 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function ensureAuth(baseUrl?: string): Promise<string> {
+    if (token.value && !token.value.startsWith('mock_token_')) {
+      return token.value;
+    }
+
+    try {
+      const url = baseUrl ? `${baseUrl}/api/auth/guest` : 'https://afterparty.miniapp.hawkren.online/api/auth/guest';
+      const res = await uni.request({
+        url,
+        method: 'POST',
+        data: {
+          nickname: user.value?.nickname,
+          avatarUrl: user.value?.avatarUrl,
+        },
+      });
+
+      const data = res.data as any;
+      if (data && data.token && data.user) {
+        setUser(data.user, data.token);
+        return data.token;
+      }
+    } catch (e) {
+      console.error('[UserStore] Failed to authenticate guest with server:', e);
+    }
+
+    return token.value;
+  }
+
   return {
     user,
     token,
     initUser,
     setUser,
     updateProfile,
+    ensureAuth,
   };
 });

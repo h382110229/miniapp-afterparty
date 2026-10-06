@@ -142,6 +142,9 @@ async function confirmCreateRoom() {
 
   try {
     socketService.connect();
+    // Ensure valid server JWT token
+    const token = await userStore.ensureAuth(getApiUrl(''));
+
     // Register message listener to navigate when room state arrives
     const unsubscribe = socketService.on((event) => {
       if (event.type === 'room:state') {
@@ -160,7 +163,7 @@ async function confirmCreateRoom() {
       url: getApiUrl('/api/room/create'),
       method: 'POST',
       header: {
-        Authorization: `Bearer ${userStore.token}`,
+        Authorization: `Bearer ${token || userStore.token}`,
       },
       data: {
         gameType: 'card_highlow',
