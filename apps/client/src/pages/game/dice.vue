@@ -240,31 +240,31 @@ const tallySummary = computed(() => {
   return parts.join(' · ') || '暂无骰子';
 });
 
-// Cup Transform Style: lifts off the circular tray
+// Cup Transform Style: lifts off the 3D perspective tray
 const cupTransformStyle = computed(() => {
   if (isShaking.value) {
     return ''; // Keyframe handles violent shake & rock
   }
-  return `translateY(-${lidProgress.value * 120}%)`;
+  return `translateY(-${lidProgress.value * 210}px)`;
 });
 
-// Generate fresh dice with random points inside circular bounds
+// Generate fresh dice with random points inside 3D elliptical bounds
 function generateDiceValues(count: number): DieData[] {
   const newDice: DieData[] = [];
   
   for (let i = 0; i < count; i++) {
-    // Distribute randomly inside a circle
-    const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.6 - 0.3);
-    const radius = 16 + Math.random() * 38; // radius in px
+    // Distribute naturally inside 3D perspective elliptical bounds
+    const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
+    const radius = 18 + Math.random() * 40;
     
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius * 0.78;
+    const x = Math.cos(angle) * radius * 1.35;
+    const y = Math.sin(angle) * radius * 0.58;
 
     newDice.push({
       value: Math.floor(Math.random() * 6) + 1,
-      rotation: Math.floor(Math.random() * 50) - 25,
-      xPercent: Math.max(-42, Math.min(42, x)),
-      yPercent: Math.max(-36, Math.min(36, y)),
+      rotation: Math.floor(Math.random() * 40) - 20,
+      xPercent: Math.max(-65, Math.min(65, Math.round(x))),
+      yPercent: Math.max(-26, Math.min(26, Math.round(y))),
     });
   }
   return newDice;
@@ -329,12 +329,16 @@ function toggleSort() {
   if (isSorted.value) {
     dice.value.sort((a, b) => a.value - b.value);
   } else {
-    dice.value = dice.value.map(d => ({
-      ...d,
-      rotation: Math.floor(Math.random() * 50) - 25,
-      xPercent: Math.floor(Math.random() * 80) - 40,
-      yPercent: Math.floor(Math.random() * 70) - 35,
-    }));
+    dice.value = dice.value.map((d, i) => {
+      const angle = (i / dice.value.length) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
+      const radius = 18 + Math.random() * 40;
+      return {
+        ...d,
+        rotation: Math.floor(Math.random() * 40) - 20,
+        xPercent: Math.max(-65, Math.min(65, Math.round(Math.cos(angle) * radius * 1.35))),
+        yPercent: Math.max(-26, Math.min(26, Math.round(Math.sin(angle) * radius * 0.58))),
+      };
+    });
   }
 }
 
@@ -570,86 +574,93 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 4px 0;
+  margin: 8px 0;
   position: relative;
+  min-height: 380px;
 }
 
 /* Table Surface Contact Shadow */
 .table-contact-shadow {
   position: absolute;
-  width: 270px;
-  height: 36px;
+  width: 290px;
+  height: 48px;
   background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 75%);
-  bottom: 42px;
+  bottom: 28px;
   border-radius: 50%;
   pointer-events: none;
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 1;
 }
 
 .table-contact-shadow.shadow-shaking {
-  transform: scale(1.25);
-  opacity: 0.6;
+  transform: scale(1.22);
+  opacity: 0.7;
 }
 
 .table-contact-shadow.shadow-lifted {
-  opacity: 0.4;
-  transform: scale(0.9);
+  opacity: 0.35;
+  transform: scale(0.92);
 }
 
-/* 100% Circular Velvet Base Tray */
+/* 3D Perspective Elliptical Velvet Base Tray */
 .circular-tray-base {
-  width: 280px;
-  height: 280px;
+  width: 290px;
+  height: 148px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
+  margin-top: 130px;
 }
 
 .tray-outer-bezel {
   width: 100%;
   height: 100%;
-  border-radius: 50%; /* 100% Pure Circle */
-  background: linear-gradient(145deg, #302414 0%, #171109 50%, #0A0805 100%);
-  border: 5px solid #5A4323;
+  border-radius: 50%; /* 3D Ellipse via width/height ratio */
+  background: linear-gradient(180deg, #5A4323 0%, #2A1E0E 40%, #0F0A05 100%);
+  border: 4px solid #CAA132;
   box-shadow: 
-    0 22px 50px rgba(0, 0, 0, 0.95),
-    inset 0 2px 4px rgba(255, 215, 0, 0.4);
+    0 24px 50px rgba(0, 0, 0, 0.95),
+    0 6px 14px rgba(0, 0, 0, 0.8),
+    inset 0 3px 6px rgba(255, 224, 130, 0.7),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 8px 12px;
   box-sizing: border-box;
+  position: relative;
 }
 
 .tray-velvet-round {
   width: 100%;
   height: 100%;
-  border-radius: 50%; /* 100% Pure Circle */
-  background: radial-gradient(circle at 50% 45%, #064E3B 0%, #032E23 68%, #011913 100%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 48%, #065440 0%, #033327 65%, #011C15 100%);
   box-shadow: 
-    inset 0 12px 30px rgba(0, 0, 0, 0.92),
-    inset 0 0 15px rgba(0, 0, 0, 0.7);
+    inset 0 10px 24px rgba(0, 0, 0, 0.92),
+    inset 0 0 12px rgba(0, 0, 0, 0.8);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 245, 160, 0.2);
+  border: 1px solid rgba(0, 245, 160, 0.25);
 }
 
 .saddle-stitch-ring {
   position: absolute;
-  width: 88%;
-  height: 88%;
+  width: 90%;
+  height: 86%;
   border-radius: 50%;
-  border: 1.5px dashed rgba(255, 215, 0, 0.35);
+  border: 1.5px dashed rgba(255, 215, 0, 0.38);
   pointer-events: none;
 }
 
-/* Dice Zone */
+/* Dice Zone inside Velvet Ellipse */
 .dice-zone-round {
-  width: 80%;
-  height: 80%;
+  width: 82%;
+  height: 76%;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -662,7 +673,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
   align-content: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .die-wrapper {
@@ -678,11 +689,12 @@ onUnmounted(() => {
 /* Tally Pill */
 .tally-pill {
   position: absolute;
-  bottom: 12px;
+  bottom: 8px;
   padding: 4px 14px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.82);
   border: 1px solid rgba(0, 245, 160, 0.55);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
 }
 
 .tally-text {
@@ -691,18 +703,18 @@ onUnmounted(() => {
   color: #00F5A0;
 }
 
-/* ================= 3D Bell-Shaped Solid Cup (Completely Opaque) ================= */
+/* ================= 3D Bell-Shaped Solid Cup (100% Completely Opaque) ================= */
 .bell-cup-container {
   position: absolute;
-  top: -10px;
-  width: 256px;
-  height: 295px;
-  z-index: 10;
+  bottom: 0px;
+  width: 282px;
+  height: 260px;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
   will-change: transform;
-  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.95));
+  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.98));
 }
 
 .bell-cup-container.is-animating {
@@ -759,14 +771,14 @@ onUnmounted(() => {
 
 /* Cup Top Dome (Elliptical Cap) */
 .cup-top-dome {
-  width: 196px;
-  height: 32px;
+  width: 200px;
+  height: 34px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #4A587A 0%, #20273A 80%, #151A26 100%);
+  background: linear-gradient(180deg, #42506F 0%, #20273A 75%, #111520 100%);
   border: 2px solid #D4AF37;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-  margin-bottom: -16px;
-  z-index: 3;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  margin-bottom: -17px;
+  z-index: 4;
   position: relative;
   display: flex;
   align-items: center;
@@ -781,28 +793,29 @@ onUnmounted(() => {
 
 /* Cup Tapered Body (Solid 100% Opaque Material with 3D Shading) */
 .cup-tapered-body {
-  width: 250px;
-  height: 236px;
+  width: 278px;
+  height: 200px;
   background: linear-gradient(
     90deg,
-    #0E121C 0%,
-    #21283A 12%,
-    #42506F 32%,
-    #56678C 48%,
-    #263044 68%,
-    #111520 84%,
-    #1B2232 100%
+    #0A0D15 0%,
+    #1A2132 14%,
+    #3A4765 35%,
+    #526388 50%,
+    #29344A 65%,
+    #0F131D 85%,
+    #182030 100%
   );
-  clip-path: polygon(11% 0%, 89% 0%, 100% 100%, 0% 100%);
-  -webkit-clip-path: polygon(11% 0%, 89% 0%, 100% 100%, 0% 100%);
+  clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);
+  -webkit-clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0 14px 0;
+  padding: 22px 0 12px 0;
   box-sizing: border-box;
-  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.85);
+  z-index: 3;
 }
 
 /* Saddle Stitch Seams */
@@ -811,15 +824,15 @@ onUnmounted(() => {
   top: 10px;
   bottom: 10px;
   width: 2px;
-  border-left: 2px dashed rgba(255, 224, 130, 0.65);
+  border-left: 2px dashed rgba(255, 224, 130, 0.7);
 }
 
 .stitch-left {
-  left: 36px;
+  left: 40px;
 }
 
 .stitch-right {
-  right: 36px;
+  right: 40px;
 }
 
 /* Golden Waist Belt with Rivets */
@@ -849,12 +862,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.7);
   padding: 8px 18px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 215, 0, 0.35);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
-  margin-top: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
+  margin-top: 4px;
 }
 
 .peek-arrow-icon {
@@ -881,10 +894,10 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 16px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   border-radius: 14px;
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  margin-bottom: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  margin-bottom: 6px;
 }
 
 .crest-emoji {
@@ -902,22 +915,22 @@ onUnmounted(() => {
 
 /* Bottom Flanged Gold Lip */
 .cup-bottom-lip {
-  width: 254px;
-  height: 18px;
-  border-radius: 0 0 50% 50% / 0 0 16px 16px;
-  background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 25%, #CAA132 50%, #FFF0A8 75%, #6F4F13 100%);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.9), inset 0 2px 3px rgba(255, 255, 255, 0.7);
-  margin-top: -6px;
+  width: 280px;
+  height: 24px;
+  border-radius: 0 0 50% 50% / 0 0 20px 20px;
+  background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 22%, #CAA132 50%, #FFF0A8 78%, #6F4F13 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.95), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  margin-top: -8px;
   z-index: 2;
 }
 
 /* Cup Interior Mouth Shadow when lifted */
 .cup-mouth-shadow {
-  width: 240px;
-  height: 20px;
+  width: 270px;
+  height: 26px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 80%);
-  margin-top: -10px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(10, 13, 21, 0.98) 0%, rgba(4, 6, 10, 0.85) 60%, transparent 100%);
+  margin-top: -13px;
   pointer-events: none;
 }
 
