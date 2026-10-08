@@ -31,11 +31,6 @@
 
         <!-- 3D Perspective Velvet Base Tray (Fixed on table) -->
         <view class="perspective-tray" @tap="handleTrayTap">
-          <!-- Floating Tally Summary Pill (Positioned above tray so it NEVER covers dice!) -->
-          <view v-if="lidProgress >= 0.55 || isSorted" class="tally-pill glass-panel">
-            <text class="tally-text">{{ tallySummary }}</text>
-          </view>
-
           <view class="tray-outer-bezel">
             <view class="tray-velvet-surface">
               <view class="tray-stitch-ring"></view>
@@ -114,11 +109,14 @@
         </view>
       </view>
 
-      <!-- Privacy Status Tag -->
-      <view class="privacy-status-badge">
+      <!-- Privacy Status & Live Tally Bar (Safely below tray, 100% visible, NEVER covered!) -->
+      <view class="privacy-status-badge" :class="{ 'is-open-state': lidProgress > 0 }">
         <view class="badge-dot" :class="{ 'dot-safe': lidProgress === 0, 'dot-open': lidProgress > 0 }"></view>
-        <text class="status-desc">
-          {{ lidProgress === 0 ? '🔒 骰盅已盖严 · 向上滑动或点击开盅' : (lidProgress >= 0.7 ? '🔓 骰盅已全开 · 点击盖严' : '👀 偷瞄中 · 松手自动落盖') }}
+        <text class="status-desc" v-if="lidProgress === 0">
+          🔒 骰盅已盖严 · 向上滑动或点击开盅
+        </text>
+        <text class="status-desc tally-bold" v-else>
+          {{ lidProgress >= 0.7 ? '🔓 点数：' : '👀 偷瞄：' }}{{ tallySummary }}
         </text>
       </view>
     </view>
@@ -210,10 +208,10 @@ let lastShakeTimestamp = 0;
 
 // Dynamic die sizing based on count
 const dieSize = computed(() => {
-  if (diceCount.value <= 4) return 56;
-  if (diceCount.value <= 6) return 48;
-  if (diceCount.value <= 9) return 40;
-  return 34;
+  if (diceCount.value <= 3) return 44;
+  if (diceCount.value <= 6) return 38;
+  if (diceCount.value <= 9) return 32;
+  return 28;
 });
 
 // Tally Summary (e.g. "3个4 · 2个1")
@@ -235,7 +233,7 @@ const cupTransformStyle = computed(() => {
   if (isShaking.value) {
     return ''; // Keyframe handles violent shake & rock
   }
-  return `translateY(-${lidProgress.value * 148}px)`;
+  return `translateY(-${lidProgress.value * 162}px)`;
 });
 
 // Pre-calculated ergonomic scatter slots for different dice counts
@@ -245,43 +243,43 @@ function getScatterSlot(index: number, total: number): { x: number; y: number } 
     return { x: 0, y: 0 };
   }
   if (total === 2) {
-    const slots = [{ x: -38, y: 0 }, { x: 38, y: 0 }];
+    const slots = [{ x: -44, y: 0 }, { x: 44, y: 0 }];
     return slots[index] || { x: 0, y: 0 };
   }
   if (total === 3) {
-    const slots = [{ x: -52, y: 6 }, { x: 0, y: -10 }, { x: 52, y: 6 }];
+    const slots = [{ x: -56, y: 6 }, { x: 0, y: -12 }, { x: 56, y: 6 }];
     return slots[index] || { x: 0, y: 0 };
   }
   if (total === 4) {
-    const slots = [{ x: -58, y: -6 }, { x: -20, y: 14 }, { x: 20, y: -12 }, { x: 58, y: 8 }];
+    const slots = [{ x: -64, y: -6 }, { x: -22, y: 15 }, { x: 22, y: -12 }, { x: 64, y: 8 }];
     return slots[index] || { x: 0, y: 0 };
   }
   if (total === 5) {
-    // Classic 5-dice liar's dice arc spread: every die is 100% visible and spread out!
+    // Generously spaced 5-dice arc spread across the 296px velvet tray (Zero overlap!)
     const slots = [
-      { x: -70, y: -4 },
-      { x: -35, y: 15 },
-      { x: 0, y: -12 },
-      { x: 35, y: 15 },
-      { x: 70, y: -4 }
+      { x: -92, y: -2 },
+      { x: -46, y: 16 },
+      { x: 0, y: -16 },
+      { x: 46, y: 16 },
+      { x: 92, y: -2 }
     ];
     return slots[index] || { x: 0, y: 0 };
   }
   if (total === 6) {
     const slots = [
-      { x: -76, y: -8 },
-      { x: -46, y: 15 },
-      { x: -16, y: -12 },
-      { x: 16, y: 15 },
-      { x: 46, y: -12 },
-      { x: 76, y: 8 }
+      { x: -92, y: -6 },
+      { x: -55, y: 16 },
+      { x: -18, y: -16 },
+      { x: 18, y: 16 },
+      { x: 55, y: -16 },
+      { x: 92, y: 6 }
     ];
     return slots[index] || { x: 0, y: 0 };
   }
   // For total > 6, compute a staggered 2-tier elliptical spread
   const angle = (index / total) * 2 * Math.PI;
-  const radiusX = (index % 2 === 0) ? 68 : 42;
-  const radiusY = (index % 2 === 0) ? 18 : 10;
+  const radiusX = (index % 2 === 0) ? 72 : 44;
+  const radiusY = (index % 2 === 0) ? 20 : 10;
   return {
     x: Math.round(Math.cos(angle) * radiusX),
     y: Math.round(Math.sin(angle) * radiusY)
@@ -297,9 +295,9 @@ function generateDiceValues(count: number): DieData[] {
 
   for (let i = 0; i < count; i++) {
     const slot = getScatterSlot(slotIndices[i], count);
-    // Subtle organic jitter: ±4px in x, ±3px in y
-    const jitterX = (Math.random() - 0.5) * 8;
-    const jitterY = (Math.random() - 0.5) * 6;
+    // Controlled organic jitter: ±3px in x, ±2px in y to guarantee zero collision
+    const jitterX = (Math.random() - 0.5) * 6;
+    const jitterY = (Math.random() - 0.5) * 4;
     const rot = Math.floor((Math.random() - 0.5) * 36); // ±18 deg
 
     newDice.push({
@@ -741,27 +739,7 @@ onUnmounted(() => {
   transform: none !important;
 }
 
-/* Floating Tally Pill (Positioned above tray so it NEVER covers dice!) */
-.tally-pill {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 16px;
-  border-radius: 20px;
-  background: rgba(10, 15, 25, 0.92);
-  border: 1px solid rgba(0, 245, 160, 0.55);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 245, 160, 0.15);
-  z-index: 6;
-  white-space: nowrap;
-}
 
-.tally-text {
-  font-size: 13px;
-  font-weight: 800;
-  color: #00F5A0;
-  letter-spacing: 0.5px;
-}
 
 /* ================= 3D Solid Luxury Bell Cup ================= */
 .bell-cup-container {
@@ -971,23 +949,31 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Privacy Status Tag */
+/* Privacy Status & Tally Summary Tag */
 .privacy-status-badge {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   margin-top: 14px;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 6px 16px;
+  background: rgba(10, 15, 25, 0.75);
+  padding: 6px 18px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  transition: all 0.25s ease;
+}
+
+.privacy-status-badge.is-open-state {
+  background: rgba(6, 78, 59, 0.45);
+  border-color: rgba(0, 245, 160, 0.55);
+  box-shadow: 0 0 15px rgba(0, 245, 160, 0.22), 0 4px 14px rgba(0, 0, 0, 0.7);
 }
 
 .badge-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .dot-safe {
@@ -996,14 +982,21 @@ onUnmounted(() => {
 }
 
 .dot-open {
-  background-color: #FFB800;
-  box-shadow: 0 0 8px #FFB800;
+  background-color: #00F5A0;
+  box-shadow: 0 0 8px #00F5A0;
 }
 
 .status-desc {
   font-size: 12px;
   color: #CBD5E0;
   font-weight: 600;
+}
+
+.status-desc.tally-bold {
+  font-size: 13px;
+  font-weight: 700;
+  color: #00F5A0;
+  letter-spacing: 0.5px;
 }
 
 /* ================= Bottom Controls Section ================= */
