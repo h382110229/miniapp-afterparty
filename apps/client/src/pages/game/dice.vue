@@ -22,46 +22,45 @@
 
     <!-- Main 3D Stage Section -->
     <view class="stage-section">
-      <!-- 3D Table Surface Contact Shadow (Dynamic scaling when cup lifts/shakes) -->
-      <view
-        class="table-contact-shadow"
-        :class="{ 'shadow-shaking': isShaking, 'shadow-lifted': lidProgress > 0.1 }"
-      ></view>
+      <view class="table-stage-box">
+        <!-- 3D Table Surface Contact Shadow -->
+        <view
+          class="table-contact-shadow"
+          :class="{ 'shadow-shaking': isShaking, 'shadow-lifted': lidProgress > 0.1 }"
+        ></view>
 
-      <!-- Circular Velvet Base Tray (Fixed on Table) -->
-      <view class="circular-tray-base" @tap="handleTrayTap">
-        <!-- Outer Leather & Gold Bezel Ring -->
-        <view class="tray-outer-bezel">
-          <!-- Deep Casino Emerald Velvet Interior (100% Round) -->
-          <view class="tray-velvet-round">
-            <!-- Saddle Stitch Circular Thread Ring -->
-            <view class="saddle-stitch-ring"></view>
+        <!-- 3D Perspective Velvet Base Tray (Fixed on table) -->
+        <view class="perspective-tray" @tap="handleTrayTap">
+          <view class="tray-outer-bezel">
+            <view class="tray-velvet-surface">
+              <view class="tray-stitch-ring"></view>
 
-            <!-- Dice Scatter Zone (Centered inside circular velvet) -->
-            <view class="dice-zone-round" :class="{ 'is-sorted': isSorted }">
-              <view
-                v-for="(die, index) in dice"
-                :key="index"
-                class="die-wrapper"
-                :style="getDieStyle(die, index)"
-              >
-                <DieFace
-                  :value="die.value"
-                  :size="dieSize"
-                  :rotation="isSorted ? 0 : die.rotation"
-                  :highlight="isSorted && die.value === 1"
-                />
+              <!-- Dice Scatter Zone inside Velvet -->
+              <view class="dice-scatter-zone" :class="{ 'is-sorted': isSorted }">
+                <view
+                  v-for="(die, index) in dice"
+                  :key="index"
+                  class="die-wrapper"
+                  :style="getDieStyle(die, index)"
+                >
+                  <DieFace
+                    :value="die.value"
+                    :size="dieSize"
+                    :rotation="isSorted ? 0 : die.rotation"
+                    :highlight="isSorted && die.value === 1"
+                  />
+                </view>
               </view>
-            </view>
 
-            <!-- Tally Summary Pill Overlay -->
-            <view v-if="lidProgress >= 0.55 || isSorted" class="tally-pill glass-panel">
-              <text class="tally-text">{{ tallySummary }}</text>
+              <!-- Tally Summary Pill Overlay -->
+              <view v-if="lidProgress >= 0.55 || isSorted" class="tally-pill glass-panel">
+                <text class="tally-text">{{ tallySummary }}</text>
+              </view>
             </view>
           </view>
         </view>
 
-        <!-- ================= 3D Bell-Shaped Solid Cup (Completely Opaque) ================= -->
+        <!-- ================= 3D Solid Luxury Bell Cup (Lifts off Tray) ================= -->
         <view
           class="bell-cup-container"
           :class="{
@@ -74,7 +73,7 @@
           @touchend="onTouchEnd"
           @touchcancel="onTouchEnd"
         >
-          <!-- Cup Top Luxury Finial Knob (金属抓钮) -->
+          <!-- Cup Top Finial Knob (金属抓钮) -->
           <view class="knob-assembly">
             <view class="knob-sphere"></view>
             <view class="knob-collar"></view>
@@ -85,34 +84,25 @@
             <view class="dome-gold-band"></view>
           </view>
 
-          <!-- Cup Tapered Body (Solid 3D Leather & Metallic Silhouette) -->
+          <!-- Cup Solid Tapered Body (100% Solid Leather & Metallic Silhouette) -->
           <view class="cup-tapered-body">
-            <!-- Left & Right Saddle Stitch Seams (Stitch UI 经典双马鞍缝线) -->
-            <view class="stitch-seam stitch-left"></view>
-            <view class="stitch-seam stitch-right"></view>
-
-            <!-- Mid-Body Golden Waist Band with Rivets -->
+            <!-- Mid-Body Champagne Gold Waist Band with Rivets -->
             <view class="gold-waist-belt">
               <view class="belt-rivet"></view>
               <view class="belt-rivet"></view>
               <view class="belt-rivet"></view>
             </view>
 
-            <!-- Touch Peek Indicator Ribbon -->
-            <view class="peek-touch-badge">
-              <text class="peek-arrow-icon">{{ lidProgress > 0.5 ? '⬇️' : '⬆️' }}</text>
-              <text class="peek-label-main">
-                {{ lidProgress > 0.5 ? '已掀开 (下滑重新盖严)' : '按住上推偷瞄' }}
-              </text>
-              <text class="peek-label-sub" v-if="lidProgress <= 0.5">
-                (松手自动落盖防偷窥)
-              </text>
+            <!-- Subtle Luxury Embossed Leather Seal (Clean, NO text boxes!) -->
+            <view class="embossed-leather-crest">
+              <view class="crest-inner-ring">
+                <text class="crest-icon">🍸</text>
+              </view>
             </view>
 
-            <!-- Luxury Embossed Golden Brand Crest -->
-            <view class="embossed-crest">
-              <text class="crest-emoji">🍸</text>
-              <text class="crest-title">AFTERPARTY</text>
+            <!-- Discreet Micro Peek Hint Chevron (Soft Breathing Indicator) -->
+            <view class="micro-peek-hint" :class="{ 'is-hidden': lidProgress > 0.05 }">
+              <text class="hint-chevron">▲</text>
             </view>
           </view>
 
@@ -128,7 +118,7 @@
       <view class="privacy-status-badge">
         <view class="badge-dot" :class="{ 'dot-safe': lidProgress === 0, 'dot-open': lidProgress > 0 }"></view>
         <text class="status-desc">
-          {{ lidProgress === 0 ? '🔒 骰盅已盖严 · 旁人无法偷看' : (lidProgress >= 0.7 ? '🔓 骰盅已全开 · 公开对质' : '👀 偷瞄中 · 松手自动落盖') }}
+          {{ lidProgress === 0 ? '🔒 骰盅已盖严 · 向上滑动或点击开盅' : (lidProgress >= 0.7 ? '🔓 骰盅已全开 · 点击盖严' : '👀 偷瞄中 · 松手自动落盖') }}
         </text>
       </view>
     </view>
@@ -255,16 +245,16 @@ function generateDiceValues(count: number): DieData[] {
   for (let i = 0; i < count; i++) {
     // Distribute naturally inside 3D perspective elliptical bounds
     const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
-    const radius = 18 + Math.random() * 40;
+    const radius = 16 + Math.random() * 36;
     
-    const x = Math.cos(angle) * radius * 1.35;
-    const y = Math.sin(angle) * radius * 0.58;
+    const x = Math.cos(angle) * radius * 1.25;
+    const y = Math.sin(angle) * radius * 0.42;
 
     newDice.push({
       value: Math.floor(Math.random() * 6) + 1,
       rotation: Math.floor(Math.random() * 40) - 20,
-      xPercent: Math.max(-65, Math.min(65, Math.round(x))),
-      yPercent: Math.max(-26, Math.min(26, Math.round(y))),
+      xPercent: Math.max(-56, Math.min(56, Math.round(x))),
+      yPercent: Math.max(-18, Math.min(18, Math.round(y))),
     });
   }
   return newDice;
@@ -331,12 +321,12 @@ function toggleSort() {
   } else {
     dice.value = dice.value.map((d, i) => {
       const angle = (i / dice.value.length) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
-      const radius = 18 + Math.random() * 40;
+      const radius = 16 + Math.random() * 36;
       return {
         ...d,
         rotation: Math.floor(Math.random() * 40) - 20,
-        xPercent: Math.max(-65, Math.min(65, Math.round(Math.cos(angle) * radius * 1.35))),
-        yPercent: Math.max(-26, Math.min(26, Math.round(Math.sin(angle) * radius * 0.58))),
+        xPercent: Math.max(-56, Math.min(56, Math.round(Math.cos(angle) * radius * 1.25))),
+        yPercent: Math.max(-18, Math.min(18, Math.round(Math.sin(angle) * radius * 0.42))),
       };
     });
   }
@@ -567,25 +557,35 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-/* ================= 3D Realistic Circular Stage ================= */
+/* ================= 3D Realistic Bar Stage ================= */
 .stage-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 8px 0;
+  margin: 6px 0;
   position: relative;
-  min-height: 380px;
+  min-height: 350px;
+}
+
+.table-stage-box {
+  width: 300px;
+  height: 300px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* Table elements rest on the surface */
 }
 
 /* Table Surface Contact Shadow */
 .table-contact-shadow {
   position: absolute;
+  bottom: 6px;
   width: 290px;
-  height: 48px;
+  height: 42px;
   background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 75%);
-  bottom: 28px;
   border-radius: 50%;
   pointer-events: none;
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
@@ -602,45 +602,45 @@ onUnmounted(() => {
   transform: scale(0.92);
 }
 
-/* 3D Perspective Elliptical Velvet Base Tray */
-.circular-tray-base {
-  width: 290px;
-  height: 148px;
-  position: relative;
+/* 3D Perspective Elliptical Velvet Base Tray (Fixed flat on table) */
+.perspective-tray {
+  width: 280px;
+  height: 104px;
+  position: absolute;
+  bottom: 12px;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
-  margin-top: 130px;
 }
 
 .tray-outer-bezel {
   width: 100%;
   height: 100%;
-  border-radius: 50%; /* 3D Ellipse via width/height ratio */
-  background: linear-gradient(180deg, #5A4323 0%, #2A1E0E 40%, #0F0A05 100%);
-  border: 4px solid #CAA132;
+  border-radius: 50%; /* 3D Ellipse via ratio */
+  background: linear-gradient(180deg, #4E381A 0%, #241A0C 40%, #0D0904 100%);
+  border: 3.5px solid #C5A059;
   box-shadow: 
-    0 24px 50px rgba(0, 0, 0, 0.95),
-    0 6px 14px rgba(0, 0, 0, 0.8),
-    inset 0 3px 6px rgba(255, 224, 130, 0.7),
-    inset 0 -6px 10px rgba(0, 0, 0, 0.9);
+    0 20px 42px rgba(0, 0, 0, 0.95),
+    0 4px 10px rgba(0, 0, 0, 0.8),
+    inset 0 2px 5px rgba(255, 230, 150, 0.65),
+    inset 0 -5px 8px rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 6px 14px;
   box-sizing: border-box;
   position: relative;
 }
 
-.tray-velvet-round {
+.tray-velvet-surface {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 48%, #065440 0%, #033327 65%, #011C15 100%);
+  background: radial-gradient(ellipse at 50% 45%, #084D3B 0%, #032E23 65%, #011812 100%);
   box-shadow: 
-    inset 0 10px 24px rgba(0, 0, 0, 0.92),
-    inset 0 0 12px rgba(0, 0, 0, 0.8);
+    inset 0 8px 20px rgba(0, 0, 0, 0.92),
+    inset 0 0 10px rgba(0, 0, 0, 0.8);
   position: relative;
   display: flex;
   align-items: center;
@@ -648,19 +648,19 @@ onUnmounted(() => {
   border: 1px solid rgba(0, 245, 160, 0.25);
 }
 
-.saddle-stitch-ring {
+.tray-stitch-ring {
   position: absolute;
-  width: 90%;
-  height: 86%;
+  width: 88%;
+  height: 82%;
   border-radius: 50%;
-  border: 1.5px dashed rgba(255, 215, 0, 0.38);
+  border: 1px dashed rgba(212, 175, 55, 0.35);
   pointer-events: none;
 }
 
-/* Dice Zone inside Velvet Ellipse */
-.dice-zone-round {
+/* Dice Scatter Zone inside Velvet */
+.dice-scatter-zone {
   width: 82%;
-  height: 76%;
+  height: 70%;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -668,7 +668,7 @@ onUnmounted(() => {
   position: relative;
 }
 
-.dice-zone-round.is-sorted {
+.dice-scatter-zone.is-sorted {
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -679,9 +679,10 @@ onUnmounted(() => {
 .die-wrapper {
   position: absolute;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
 }
 
-.dice-zone-round.is-sorted .die-wrapper {
+.dice-scatter-zone.is-sorted .die-wrapper {
   position: static;
   transform: none !important;
 }
@@ -689,10 +690,10 @@ onUnmounted(() => {
 /* Tally Pill */
 .tally-pill {
   position: absolute;
-  bottom: 8px;
-  padding: 4px 14px;
+  bottom: 4px;
+  padding: 3px 14px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.85);
   border: 1px solid rgba(0, 245, 160, 0.55);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
 }
@@ -703,18 +704,18 @@ onUnmounted(() => {
   color: #00F5A0;
 }
 
-/* ================= 3D Bell-Shaped Solid Cup (100% Completely Opaque) ================= */
+/* ================= 3D Solid Luxury Bell Cup ================= */
 .bell-cup-container {
   position: absolute;
-  bottom: 0px;
-  width: 282px;
-  height: 260px;
-  z-index: 20;
+  bottom: 12px;
+  width: 274px;
+  height: 246px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   will-change: transform;
-  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.98));
+  filter: drop-shadow(0 22px 35px rgba(0, 0, 0, 0.98));
 }
 
 .bell-cup-container.is-animating {
@@ -743,7 +744,7 @@ onUnmounted(() => {
 
 /* Top Finial Grip Knob */
 .knob-assembly {
-  width: 48px;
+  width: 46px;
   height: 22px;
   display: flex;
   flex-direction: column;
@@ -753,7 +754,7 @@ onUnmounted(() => {
 }
 
 .knob-sphere {
-  width: 38px;
+  width: 36px;
   height: 16px;
   border-radius: 50% 50% 6px 6px;
   background: linear-gradient(135deg, #FFE57F 0%, #D4AF37 45%, #7D5C10 100%);
@@ -763,7 +764,7 @@ onUnmounted(() => {
 }
 
 .knob-collar {
-  width: 26px;
+  width: 24px;
   height: 5px;
   background: linear-gradient(90deg, #5A4323, #FFE57F, #5A4323);
   border-radius: 2px;
@@ -771,13 +772,13 @@ onUnmounted(() => {
 
 /* Cup Top Dome (Elliptical Cap) */
 .cup-top-dome {
-  width: 200px;
-  height: 34px;
+  width: 196px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #42506F 0%, #20273A 75%, #111520 100%);
-  border: 2px solid #D4AF37;
+  background: linear-gradient(180deg, #3C4864 0%, #1A2130 75%, #0E121B 100%);
+  border: 2px solid #C5A059;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
-  margin-bottom: -17px;
+  margin-bottom: -16px;
   z-index: 4;
   position: relative;
   display: flex;
@@ -793,17 +794,17 @@ onUnmounted(() => {
 
 /* Cup Tapered Body (Solid 100% Opaque Material with 3D Shading) */
 .cup-tapered-body {
-  width: 278px;
-  height: 200px;
+  width: 272px;
+  height: 192px;
   background: linear-gradient(
     90deg,
     #0A0D15 0%,
-    #1A2132 14%,
-    #3A4765 35%,
-    #526388 50%,
-    #29344A 65%,
-    #0F131D 85%,
-    #182030 100%
+    #171E2D 14%,
+    #323D57 35%,
+    #4A587A 50%,
+    #232C3E 65%,
+    #0D111A 85%,
+    #151B27 100%
   );
   clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);
   -webkit-clip-path: polygon(14% 0%, 86% 0%, 100% 100%, 0% 100%);
@@ -812,39 +813,22 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 0 12px 0;
+  padding: 24px 0 16px 0;
   box-sizing: border-box;
   box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.85);
   z-index: 3;
 }
 
-/* Saddle Stitch Seams */
-.stitch-seam {
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  border-left: 2px dashed rgba(255, 224, 130, 0.7);
-}
-
-.stitch-left {
-  left: 40px;
-}
-
-.stitch-right {
-  right: 40px;
-}
-
 /* Golden Waist Belt with Rivets */
 .gold-waist-belt {
-  width: 88%;
-  height: 8px;
+  width: 86%;
+  height: 7px;
   background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 25%, #CAA132 50%, #FFF0A8 75%, #6F4F13 100%);
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 20px;
+  padding: 0 24px;
   box-sizing: border-box;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
@@ -857,65 +841,59 @@ onUnmounted(() => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Touch Peek Indicator Ribbon */
-.peek-touch-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 8px 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
-  margin-top: 4px;
-}
-
-.peek-arrow-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.peek-label-main {
-  font-size: 11px;
-  font-weight: 800;
-  color: #E2E8F0;
-  margin-top: 3px;
-}
-
-.peek-label-sub {
-  font-size: 9px;
-  color: #00F5A0;
-  margin-top: 1px;
-}
-
-/* Luxury Embossed Golden Brand Crest */
-.embossed-crest {
+/* Subtle Luxury Embossed Leather Seal */
+.embossed-leather-crest {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 16px;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 215, 0, 0.45);
-  margin-bottom: 6px;
+  justify-content: center;
+  margin-top: 10px;
 }
 
-.crest-emoji {
-  font-size: 15px;
+.crest-inner-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.6) 80%);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.crest-title {
+.crest-icon {
+  font-size: 20px;
+  opacity: 0.9;
+}
+
+/* Discreet Micro Peek Hint Chevron */
+.micro-peek-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  transition: opacity 0.25s ease;
+  animation: gentleBreathe 2s ease-in-out infinite alternate;
+}
+
+.micro-peek-hint.is-hidden {
+  opacity: 0;
+}
+
+.hint-chevron {
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  background: linear-gradient(135deg, #FFE57F 0%, #D4AF37 50%, #FFB800 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #C5A059;
+  letter-spacing: 1px;
+}
+
+@keyframes gentleBreathe {
+  0% { transform: translateY(0); opacity: 0.3; }
+  100% { transform: translateY(-4px); opacity: 0.7; }
 }
 
 /* Bottom Flanged Gold Lip */
 .cup-bottom-lip {
-  width: 280px;
+  width: 274px;
   height: 24px;
   border-radius: 0 0 50% 50% / 0 0 20px 20px;
   background: linear-gradient(90deg, #7A5A18 0%, #FFDF73 22%, #CAA132 50%, #FFF0A8 78%, #6F4F13 100%);
@@ -926,7 +904,7 @@ onUnmounted(() => {
 
 /* Cup Interior Mouth Shadow when lifted */
 .cup-mouth-shadow {
-  width: 270px;
+  width: 265px;
   height: 26px;
   border-radius: 50%;
   background: radial-gradient(ellipse at 50% 50%, rgba(10, 13, 21, 0.98) 0%, rgba(4, 6, 10, 0.85) 60%, transparent 100%);
@@ -940,10 +918,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 7px;
   margin-top: 14px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   padding: 6px 16px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .badge-dot {
