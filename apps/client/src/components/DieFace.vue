@@ -77,18 +77,19 @@ withDefaults(
 
 <style scoped>
 .die-box {
-  background: linear-gradient(145deg, #FFFFFF 0%, #ECEEF2 100%);
-  border-radius: 12px;
+  background: linear-gradient(155deg, #FFFFFF 0%, #F5F7FA 55%, #E2E6EE 100%);
+  border-radius: 10px;
   box-shadow: 
-    0 4px 10px rgba(0, 0, 0, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.15);
+    0 6px 14px rgba(0, 0, 0, 0.65),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1.5px 2px rgba(255, 255, 255, 1),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   user-select: none;
-  border: 1px solid rgba(220, 225, 235, 0.9);
+  border: 1px solid rgba(210, 218, 230, 0.95);
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
 

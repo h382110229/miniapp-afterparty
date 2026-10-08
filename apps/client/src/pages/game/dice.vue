@@ -31,6 +31,11 @@
 
         <!-- 3D Perspective Velvet Base Tray (Fixed on table) -->
         <view class="perspective-tray" @tap="handleTrayTap">
+          <!-- Floating Tally Summary Pill (Positioned above tray so it NEVER covers dice!) -->
+          <view v-if="lidProgress >= 0.55 || isSorted" class="tally-pill glass-panel">
+            <text class="tally-text">{{ tallySummary }}</text>
+          </view>
+
           <view class="tray-outer-bezel">
             <view class="tray-velvet-surface">
               <view class="tray-stitch-ring"></view>
@@ -50,11 +55,6 @@
                     :highlight="isSorted && die.value === 1"
                   />
                 </view>
-              </view>
-
-              <!-- Tally Summary Pill Overlay -->
-              <view v-if="lidProgress >= 0.55 || isSorted" class="tally-pill glass-panel">
-                <text class="tally-text">{{ tallySummary }}</text>
               </view>
             </view>
           </view>
@@ -235,26 +235,78 @@ const cupTransformStyle = computed(() => {
   if (isShaking.value) {
     return ''; // Keyframe handles violent shake & rock
   }
-  return `translateY(-${lidProgress.value * 210}px)`;
+  return `translateY(-${lidProgress.value * 148}px)`;
 });
 
-// Generate fresh dice with random points inside 3D elliptical bounds
+// Pre-calculated ergonomic scatter slots for different dice counts
+// Designed to mimic realistic bar dice spread across the 3D elliptical velvet tray
+function getScatterSlot(index: number, total: number): { x: number; y: number } {
+  if (total === 1) {
+    return { x: 0, y: 0 };
+  }
+  if (total === 2) {
+    const slots = [{ x: -38, y: 0 }, { x: 38, y: 0 }];
+    return slots[index] || { x: 0, y: 0 };
+  }
+  if (total === 3) {
+    const slots = [{ x: -52, y: 6 }, { x: 0, y: -10 }, { x: 52, y: 6 }];
+    return slots[index] || { x: 0, y: 0 };
+  }
+  if (total === 4) {
+    const slots = [{ x: -58, y: -6 }, { x: -20, y: 14 }, { x: 20, y: -12 }, { x: 58, y: 8 }];
+    return slots[index] || { x: 0, y: 0 };
+  }
+  if (total === 5) {
+    // Classic 5-dice liar's dice arc spread: every die is 100% visible and spread out!
+    const slots = [
+      { x: -70, y: -4 },
+      { x: -35, y: 15 },
+      { x: 0, y: -12 },
+      { x: 35, y: 15 },
+      { x: 70, y: -4 }
+    ];
+    return slots[index] || { x: 0, y: 0 };
+  }
+  if (total === 6) {
+    const slots = [
+      { x: -76, y: -8 },
+      { x: -46, y: 15 },
+      { x: -16, y: -12 },
+      { x: 16, y: 15 },
+      { x: 46, y: -12 },
+      { x: 76, y: 8 }
+    ];
+    return slots[index] || { x: 0, y: 0 };
+  }
+  // For total > 6, compute a staggered 2-tier elliptical spread
+  const angle = (index / total) * 2 * Math.PI;
+  const radiusX = (index % 2 === 0) ? 68 : 42;
+  const radiusY = (index % 2 === 0) ? 18 : 10;
+  return {
+    x: Math.round(Math.cos(angle) * radiusX),
+    y: Math.round(Math.sin(angle) * radiusY)
+  };
+}
+
+// Generate fresh dice with guaranteed non-overlapping positions
 function generateDiceValues(count: number): DieData[] {
   const newDice: DieData[] = [];
   
+  // Randomize slot order so dice aren't always in the same slot order
+  const slotIndices = Array.from({ length: count }, (_, i) => i).sort(() => Math.random() - 0.5);
+
   for (let i = 0; i < count; i++) {
-    // Distribute naturally inside 3D perspective elliptical bounds
-    const angle = (i / count) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
-    const radius = 16 + Math.random() * 36;
-    
-    const x = Math.cos(angle) * radius * 1.25;
-    const y = Math.sin(angle) * radius * 0.42;
+    const slot = getScatterSlot(slotIndices[i], count);
+    // Subtle organic jitter: ±4px in x, ±3px in y
+    const jitterX = (Math.random() - 0.5) * 8;
+    const jitterY = (Math.random() - 0.5) * 6;
+    const rot = Math.floor((Math.random() - 0.5) * 36); // ±18 deg
 
     newDice.push({
       value: Math.floor(Math.random() * 6) + 1,
-      rotation: Math.floor(Math.random() * 40) - 20,
-      xPercent: Math.max(-56, Math.min(56, Math.round(x))),
-      yPercent: Math.max(-18, Math.min(18, Math.round(y))),
+      rotation: rot,
+      xPercent: Math.round(slot.x + jitterX),
+      yPercent: Math.round(slot.y + jitterY),
     });
   }
   return newDice;
@@ -319,14 +371,16 @@ function toggleSort() {
   if (isSorted.value) {
     dice.value.sort((a, b) => a.value - b.value);
   } else {
+    const slotIndices = Array.from({ length: dice.value.length }, (_, i) => i).sort(() => Math.random() - 0.5);
     dice.value = dice.value.map((d, i) => {
-      const angle = (i / dice.value.length) * 2 * Math.PI + (Math.random() * 0.8 - 0.4);
-      const radius = 16 + Math.random() * 36;
+      const slot = getScatterSlot(slotIndices[i], dice.value.length);
+      const jitterX = (Math.random() - 0.5) * 8;
+      const jitterY = (Math.random() - 0.5) * 6;
       return {
         ...d,
-        rotation: Math.floor(Math.random() * 40) - 20,
-        xPercent: Math.max(-56, Math.min(56, Math.round(Math.cos(angle) * radius * 1.25))),
-        yPercent: Math.max(-18, Math.min(18, Math.round(Math.sin(angle) * radius * 0.42))),
+        rotation: Math.floor((Math.random() - 0.5) * 36),
+        xPercent: Math.round(slot.x + jitterX),
+        yPercent: Math.round(slot.y + jitterY),
       };
     });
   }
@@ -564,14 +618,14 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 6px 0;
+  margin: 4px 0;
   position: relative;
-  min-height: 350px;
+  min-height: 380px;
 }
 
 .table-stage-box {
-  width: 300px;
-  height: 300px;
+  width: 320px;
+  height: 360px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -582,9 +636,9 @@ onUnmounted(() => {
 /* Table Surface Contact Shadow */
 .table-contact-shadow {
   position: absolute;
-  bottom: 6px;
-  width: 290px;
-  height: 42px;
+  bottom: 8px;
+  width: 296px;
+  height: 46px;
   background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.95) 0%, transparent 75%);
   border-radius: 50%;
   pointer-events: none;
@@ -604,10 +658,10 @@ onUnmounted(() => {
 
 /* 3D Perspective Elliptical Velvet Base Tray (Fixed flat on table) */
 .perspective-tray {
-  width: 280px;
-  height: 104px;
+  width: 296px;
+  height: 130px;
   position: absolute;
-  bottom: 12px;
+  bottom: 16px;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -617,18 +671,18 @@ onUnmounted(() => {
 .tray-outer-bezel {
   width: 100%;
   height: 100%;
-  border-radius: 50%; /* 3D Ellipse via ratio */
+  border-radius: 50%; /* 3D Ellipse */
   background: linear-gradient(180deg, #4E381A 0%, #241A0C 40%, #0D0904 100%);
   border: 3.5px solid #C5A059;
   box-shadow: 
-    0 20px 42px rgba(0, 0, 0, 0.95),
+    0 22px 46px rgba(0, 0, 0, 0.95),
     0 4px 10px rgba(0, 0, 0, 0.8),
     inset 0 2px 5px rgba(255, 230, 150, 0.65),
     inset 0 -5px 8px rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
+  padding: 8px 16px;
   box-sizing: border-box;
   position: relative;
 }
@@ -659,8 +713,8 @@ onUnmounted(() => {
 
 /* Dice Scatter Zone inside Velvet */
 .dice-scatter-zone {
-  width: 82%;
-  height: 70%;
+  width: 86%;
+  height: 76%;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -679,7 +733,7 @@ onUnmounted(() => {
 .die-wrapper {
   position: absolute;
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.75));
 }
 
 .dice-scatter-zone.is-sorted .die-wrapper {
@@ -687,29 +741,34 @@ onUnmounted(() => {
   transform: none !important;
 }
 
-/* Tally Pill */
+/* Floating Tally Pill (Positioned above tray so it NEVER covers dice!) */
 .tally-pill {
   position: absolute;
-  bottom: 4px;
-  padding: 3px 14px;
+  top: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(10, 15, 25, 0.92);
   border: 1px solid rgba(0, 245, 160, 0.55);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 245, 160, 0.15);
+  z-index: 6;
+  white-space: nowrap;
 }
 
 .tally-text {
   font-size: 13px;
   font-weight: 800;
   color: #00F5A0;
+  letter-spacing: 0.5px;
 }
 
 /* ================= 3D Solid Luxury Bell Cup ================= */
 .bell-cup-container {
   position: absolute;
-  bottom: 12px;
-  width: 274px;
-  height: 246px;
+  bottom: 16px;
+  width: 280px;
+  height: 236px;
   z-index: 10;
   display: flex;
   flex-direction: column;
