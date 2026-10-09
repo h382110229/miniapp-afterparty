@@ -101,14 +101,14 @@ function handleSeatClick(seat: Seat) {
 }
 
 .seat-box.is-active {
-  border-color: #00F5A0;
-  box-shadow: 0 0 16px rgba(0, 245, 160, 0.4);
-  background: rgba(0, 245, 160, 0.1);
+  border-color: #FFDF73;
+  box-shadow: 0 0 16px rgba(255, 223, 115, 0.45), 0 4px 12px rgba(0, 0, 0, 0.6);
+  background: rgba(255, 223, 115, 0.12);
   transform: translateY(-2px);
 }
 
 .seat-box.is-me {
-  border-color: #00E5FF;
+  border-color: #00F5A0;
 }
 
 .avatar-wrap {
@@ -124,7 +124,7 @@ function handleSeatClick(seat: Seat) {
 }
 
 .is-active .avatar-wrap {
-  background: linear-gradient(135deg, #00F5A0, #00D9F5);
+  background: linear-gradient(135deg, #FFDF73, #D4AF37);
 }
 
 .avatar {
@@ -139,16 +139,17 @@ function handleSeatClick(seat: Seat) {
   bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
-  background: #00F5A0;
+  background: linear-gradient(135deg, #FFDF73, #D4AF37);
   border-radius: 8px;
-  padding: 1px 4px;
+  padding: 1px 5px;
   white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .turn-text {
   font-size: 9px;
-  font-weight: 800;
-  color: #0B0E17;
+  font-weight: 900;
+  color: #1A1204;
 }
 
 .nickname {

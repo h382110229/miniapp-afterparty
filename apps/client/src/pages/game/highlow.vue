@@ -24,107 +24,145 @@
       :stats="highLowStore.gameState?.stats"
     />
 
-    <!-- Main Game Table -->
-    <view class="poker-table">
-      <!-- Top Dealing & Guessing Area -->
-      <view class="drawn-area">
-        <view class="draw-pile">
-          <view class="deck-stack">
-            <view class="card-layer layer-3"></view>
-            <view class="card-layer layer-2"></view>
-            <view class="card-layer layer-1">
-              <text class="pile-text">{{ highLowStore.gameState?.deckRemainingCount ?? 46 }}</text>
+    <!-- Main 3D Luxury Casino Poker Table -->
+    <view class="casino-poker-table">
+      <view class="table-armrest-rim">
+        <view class="table-emerald-felt">
+          <!-- Subtle Gold Watermark Betting Boundary Line -->
+          <view class="table-stitch-decor"></view>
+
+          <!-- Dealing & VS Duel Stage -->
+          <view class="dealing-stage">
+            <!-- 3D Card Deck Stack -->
+            <view class="deck-3d-stack">
+              <view class="deck-layers">
+                <view class="deck-layer layer-deep"></view>
+                <view class="deck-layer layer-mid"></view>
+                <view class="deck-layer layer-top">
+                  <view class="deck-top-pattern">
+                    <text class="deck-crown-icon">⚜</text>
+                    <text class="deck-count-num">{{ highLowStore.gameState?.deckRemainingCount ?? 46 }}</text>
+                    <text class="deck-sub-text">REMAINING</text>
+                  </view>
+                </view>
+              </view>
+              <text class="deck-label">牌堆 (52张)</text>
+            </view>
+
+            <!-- VS Duel Arena: Target Card vs Drawn Secret Card -->
+            <view class="vs-arena">
+              <!-- Target Slot (基准牌) -->
+              <view class="felt-slot target-slot">
+                <view class="slot-badge">
+                  <text class="slot-badge-text">比对基准牌</text>
+                </view>
+                <PokerCard 
+                  v-if="highLowStore.activeTargetCard" 
+                  :card="highLowStore.activeTargetCard" 
+                  :isFlipped="true" 
+                  isTarget 
+                />
+                <view v-else class="empty-felt-placeholder">
+                  <text class="placeholder-icon">🎯</text>
+                  <text class="placeholder-text">待选公共牌</text>
+                </view>
+              </view>
+
+              <!-- VS Metallic Bevel Medallion -->
+              <view class="vs-medallion-box">
+                <view class="vs-medallion" :class="{ 'is-dueling': highLowStore.gameState?.phase === 'guessing' }">
+                  <text class="vs-title">VS</text>
+                </view>
+              </view>
+
+              <!-- Drawn Card Slot (摸出的暗牌) -->
+              <view class="felt-slot drawn-slot">
+                <view class="slot-badge">
+                  <text class="slot-badge-text">摸出暗牌</text>
+                </view>
+                <view
+                  v-if="highLowStore.gameState?.drawnCard || revealedDrawnCard"
+                  class="drawn-anim-wrapper"
+                  :class="{
+                    'animate-flip-reveal': isRevealing,
+                    'animate-fly-to-cover': isCovering
+                  }"
+                >
+                  <PokerCard
+                    :card="revealedDrawnCard || highLowStore.gameState?.drawnCard"
+                    :isFlipped="isRevealing || isCovering || highLowStore.gameState?.drawnCardRevealed"
+                    :isBoundary="(revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 1 || (revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 13"
+                  />
+                </view>
+                <view v-else class="empty-felt-placeholder">
+                  <text class="placeholder-icon">🎴</text>
+                  <text class="placeholder-text">待摸暗牌</text>
+                </view>
+              </view>
             </view>
           </view>
-          <text class="pile-label">牌堆</text>
-        </view>
 
-        <!-- Current Target vs Drawn Unknown Card with stable dimensions -->
-        <view class="vs-zone">
-          <view class="card-slot target-slot">
-            <text class="slot-title">比对基准牌</text>
-            <PokerCard v-if="highLowStore.activeTargetCard" :card="highLowStore.activeTargetCard" :isFlipped="true" isTarget />
-            <view v-else class="empty-card-placeholder">
-              <text class="placeholder-text">待选</text>
+          <!-- Public 6 Cards Board Section -->
+          <view class="public-board-section">
+            <view class="board-header">
+              <view class="title-with-pill">
+                <text class="board-title">♠ 公共牌展示区 (共 6 张) ♥</text>
+              </view>
+              <view class="turn-hint-tag" v-if="highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target'">
+                <text class="hint-blink">👉 请点选 1 张作为基准</text>
+              </view>
             </view>
-          </view>
 
-          <view class="vs-divider">
-            <text class="vs-text" :class="{ 'is-active': highLowStore.gameState?.phase === 'guessing' }">VS</text>
-          </view>
-
-          <view class="card-slot drawn-slot">
-            <text class="slot-title">摸出的暗牌</text>
-            <view
-              v-if="highLowStore.gameState?.drawnCard || revealedDrawnCard"
-              class="drawn-anim-wrapper"
-              :class="{
-                'animate-flip-reveal': isRevealing,
-                'animate-fly-to-cover': isCovering
-              }"
-            >
-              <PokerCard
-                :card="revealedDrawnCard || highLowStore.gameState?.drawnCard"
-                :isFlipped="isRevealing || isCovering || highLowStore.gameState?.drawnCardRevealed"
-                :isBoundary="(revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 1 || (revealedDrawnCard || highLowStore.gameState?.drawnCard)?.rank === 13"
-              />
-            </view>
-            <view v-else class="empty-card-placeholder">
-              <text class="placeholder-text">待摸</text>
+            <view class="public-cards-grid">
+              <view
+                v-for="(card, idx) in highLowStore.gameState?.publicCards || []"
+                :key="card ? `${card.suit}_${card.rank}_${idx}` : `slot_${idx}`"
+                class="card-cell-wrapper"
+                :class="{
+                  'is-selectable': highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target',
+                  'is-active-target': highLowStore.gameState?.activeTargetIndex === idx,
+                  'is-being-covered': isCovering && coveringTargetIndex === idx
+                }"
+                @tap="onSelectPublicCard(idx)"
+              >
+                <view class="recessed-pocket">
+                  <PokerCard
+                    v-if="card"
+                    :card="card"
+                    :isFlipped="true"
+                  />
+                  <view v-else class="empty-pocket-placeholder">
+                    <text class="pocket-text">空位</text>
+                  </view>
+                </view>
+              </view>
             </view>
           </view>
         </view>
       </view>
 
-      <!-- Public 6 Cards Grid -->
-      <view class="public-area glass-panel">
-        <view class="public-header">
-          <text class="public-title">公共牌区域 (共 6 张)</text>
-          <text class="hint-text" v-if="highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target'">
-            👉 请选择 1 张公共牌作为基准
-          </text>
-        </view>
-
-        <view class="cards-grid">
-          <view
-            v-for="(card, idx) in highLowStore.gameState?.publicCards || []"
-            :key="card ? `${card.suit}_${card.rank}_${idx}` : `slot_${idx}`"
-            class="card-cell"
-            :class="{
-              'is-selectable': highLowStore.isMyTurn && highLowStore.gameState?.phase === 'selecting_target',
-              'is-active-target': highLowStore.gameState?.activeTargetIndex === idx,
-              'is-being-covered': isCovering && coveringTargetIndex === idx
-            }"
-            @tap="onSelectPublicCard(idx)"
-          >
-            <PokerCard
-              v-if="card"
-              :card="card"
-              :isFlipped="true"
-            />
-            <view v-else class="empty-card-placeholder">
-              <text class="placeholder-text">空位</text>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- Controls & Turn Guidance -->
+      <!-- Bottom Controls & Turn Guidance -->
       <view class="controls-panel">
         <template v-if="highLowStore.isMyTurn">
           <view v-if="highLowStore.gameState?.phase === 'selecting_target'" class="turn-prompt-banner neon-glow-emerald">
             <text class="prompt-icon">🎯</text>
-            <text class="prompt-text">轮到你行动！请从上方公共牌中选 1 张比大小</text>
+            <text class="prompt-text">轮到你行动！请从上方公共牌中点选 1 张作为比对基准</text>
           </view>
 
           <view v-else-if="highLowStore.gameState?.phase === 'guessing'" class="guess-actions">
-            <button class="btn-primary guess-btn guess-high" @tap="submitGuess('high')">
+            <button class="guess-btn guess-high" hover-class="btn-hover-high" @tap="submitGuess('high')">
               <text class="arrow-icon">▲</text>
-              <text class="guess-label">猜更 大 (HIGH)</text>
+              <view class="btn-text-col">
+                <text class="guess-label">猜更 大</text>
+                <text class="guess-sub">HIGH (A~K)</text>
+              </view>
             </button>
-            <button class="btn-danger guess-btn guess-low" @tap="submitGuess('low')">
+            <button class="guess-btn guess-low" hover-class="btn-hover-low" @tap="submitGuess('low')">
               <text class="arrow-icon">▼</text>
-              <text class="guess-label">猜更 小 (LOW)</text>
+              <view class="btn-text-col">
+                <text class="guess-label">猜更 小</text>
+                <text class="guess-sub">LOW (A~K)</text>
+              </view>
             </button>
           </view>
         </template>
@@ -133,7 +171,7 @@
           <view class="other-turn-box glass-panel">
             <text class="pulsing-dot">●</text>
             <text class="other-turn-text">
-              等待【{{ currentTurnNickname }}】比大小中，准备观战罚酒...
+              等待【{{ currentTurnNickname }}】比对暗牌中 · 准备观战罚酒...
             </text>
           </view>
         </template>
@@ -200,6 +238,7 @@ import { socketService } from '../../utils/socket';
 import { ActionResult } from '@afterparty/shared-types';
 import PokerCard from '../../components/PokerCard.vue';
 import SeatWheel from '../../components/SeatWheel.vue';
+import { cardAudio } from '../../utils/cardAudio';
 
 const roomStore = useRoomStore();
 const userStore = useUserStore();
@@ -238,10 +277,15 @@ onLoad((query) => {
         isRevealing.value = true;
         isCovering.value = false;
         showResultModal.value = false;
+        cardAudio.playFlip();
+        try {
+          uni.vibrateShort({ success: () => {}, fail: () => {} });
+        } catch (e) {}
 
         // Stage 2: Card flies & covers the target public card (800ms ~ 1500ms)
         setTimeout(() => {
           isCovering.value = true;
+          cardAudio.playDraw();
         }, 800);
 
         // Stage 3: Show outcome modal after visual animation finishes (1600ms)
@@ -249,6 +293,18 @@ onLoad((query) => {
           isRevealing.value = false;
           isCovering.value = false;
           showResultModal.value = true;
+
+          if (animData.outcome === 'bonus_turn') {
+            cardAudio.playBonus();
+            try {
+              uni.vibrateLong({ success: () => {}, fail: () => {} });
+            } catch (e) {}
+          } else if (animData.outcome === 'wrong' || animData.outcome === 'tie') {
+            cardAudio.playPenalty();
+            try {
+              uni.vibrateLong({ success: () => {}, fail: () => {} });
+            } catch (e) {}
+          }
         }, 1600);
       }
     } else if (event.type === 'room:state') {
@@ -283,11 +339,22 @@ const resultTitle = computed(() => {
 function onSelectPublicCard(idx: number) {
   if (!highLowStore.isMyTurn || highLowStore.gameState?.phase !== 'selecting_target') return;
   if (highLowStore.gameState?.activeTargetIndex === idx) return; // Prevent duplicate selection jitter
+  
+  cardAudio.playDraw();
+  try {
+    uni.vibrateShort({ success: () => {}, fail: () => {} });
+  } catch (e) {}
+
   highLowStore.selectTarget(idx);
 }
 
 function submitGuess(guess: 'high' | 'low') {
   if (!highLowStore.isMyTurn || highLowStore.gameState?.phase !== 'guessing') return;
+  
+  try {
+    uni.vibrateShort({ success: () => {}, fail: () => {} });
+  } catch (e) {}
+
   highLowStore.makeGuess(guess);
 }
 
@@ -315,11 +382,12 @@ function confirmExit() {
 
 <style scoped>
 .game-arena {
-  padding: 12px 10px 40px;
+  padding: 10px 10px 36px;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
+/* ================= Top Nav ================= */
 .top-nav {
   display: flex;
   align-items: center;
@@ -352,7 +420,7 @@ function confirmExit() {
 .deck-highlight {
   font-size: 13px;
   font-weight: 700;
-  color: #00E5FF;
+  color: #FFDF73;
 }
 
 .exit-btn {
@@ -361,165 +429,362 @@ function confirmExit() {
   font-size: 11px;
   padding: 4px 10px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   line-height: 1.5;
 }
 
-/* Table Area */
-.poker-table {
+/* ================= 3D Casino Poker Table ================= */
+.casino-poker-table {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 6px;
+  gap: 12px;
+  margin-top: 4px;
 }
 
-.drawn-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 10px;
-  background: radial-gradient(circle, rgba(0, 245, 160, 0.05) 0%, transparent 70%);
+/* Outer Walnut & Leather Padded Armrest Bezel */
+.table-armrest-rim {
+  width: 100%;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #422D16 0%, #1F1409 45%, #0D0803 100%);
+  border: 3.5px solid #C5A059;
+  box-shadow: 
+    0 22px 48px rgba(0, 0, 0, 0.95),
+    0 4px 10px rgba(0, 0, 0, 0.8),
+    inset 0 2px 4px rgba(255, 230, 150, 0.55),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.85);
+  padding: 7px;
+  box-sizing: border-box;
 }
 
-.draw-pile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.deck-stack {
+/* Monte Carlo Casino Emerald Velvet Surface */
+.table-emerald-felt {
+  width: 100%;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 30%, #0A533E 0%, #043023 60%, #011812 100%);
+  box-shadow: 
+    inset 0 10px 24px rgba(0, 0, 0, 0.92),
+    inset 0 0 16px rgba(0, 245, 160, 0.12);
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  padding: 12px 10px;
+  box-sizing: border-box;
   position: relative;
-  width: 60px;
-  height: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.card-layer {
+/* Dashed Gold Watermark Betting Boundary Line */
+.table-stitch-decor {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border-radius: 16px;
+  border: 1px dashed rgba(212, 175, 55, 0.28);
+  pointer-events: none;
+}
+
+/* ================= Dealing & VS Stage ================= */
+.dealing-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+/* 3D Stack of Cards in the Dealing Pile */
+.deck-3d-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.deck-layers {
+  position: relative;
+  width: 62px;
+  height: 88px;
+}
+
+.deck-layer {
   position: absolute;
   width: 100%;
   height: 100%;
   border-radius: 8px;
-  border: 1px solid #00F5A0;
-  background: #131B2E;
+  box-sizing: border-box;
 }
 
-.layer-3 { top: -4px; left: -4px; opacity: 0.4; }
-.layer-2 { top: -2px; left: -2px; opacity: 0.7; }
-.layer-1 {
-  top: 0; left: 0;
+.layer-deep {
+  top: -4px;
+  left: -4px;
+  background: #0A0E18;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  opacity: 0.5;
+}
+
+.layer-mid {
+  top: -2px;
+  left: -2px;
+  background: #141B2B;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  opacity: 0.8;
+}
+
+.layer-top {
+  top: 0;
+  left: 0;
+  background: linear-gradient(145deg, #182030 0%, #0C1019 100%);
+  border: 1.5px solid #FFDF73;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-.pile-text {
-  font-size: 18px;
-  font-weight: 900;
-  color: #00F5A0;
-}
-
-.pile-label {
-  font-size: 11px;
-  color: #94A3B8;
-  margin-top: 4px;
-}
-
-.vs-zone {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.card-slot {
+.deck-top-pattern {
+  width: 90%;
+  height: 90%;
+  border-radius: 5px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(25, 34, 52, 0.9) 0%, rgba(9, 13, 20, 0.95) 100%);
+}
+
+.deck-crown-icon {
+  font-size: 11px;
+  color: #FFDF73;
+}
+
+.deck-count-num {
+  font-size: 17px;
+  font-weight: 900;
+  color: #FFDF73;
+  line-height: 1.1;
+  text-shadow: 0 0 8px rgba(255, 223, 115, 0.6);
+}
+
+.deck-sub-text {
+  font-size: 6px;
+  font-weight: 700;
+  color: #CAA132;
+  letter-spacing: 0.5px;
+}
+
+.deck-label {
+  font-size: 10px;
+  color: #CBD5E0;
+  font-weight: 600;
+}
+
+/* VS Arena */
+.vs-arena {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.felt-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.slot-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.slot-badge-text {
+  font-size: 9px;
+  font-weight: 700;
+  color: #FFDF73;
+  letter-spacing: 0.5px;
+}
+
+.empty-felt-placeholder {
+  width: 86px;
+  height: 122px;
+  border-radius: 9px;
+  border: 1.5px dashed rgba(212, 175, 55, 0.4);
+  background: rgba(0, 20, 15, 0.45);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
 }
 
-.slot-title {
-  font-size: 10px;
-  color: #00E5FF;
-  font-weight: 700;
+.placeholder-icon {
+  font-size: 22px;
+  opacity: 0.7;
 }
 
-.vs-text {
-  font-size: 18px;
+.placeholder-text {
+  font-size: 11px;
+  color: rgba(255, 223, 115, 0.6);
+  font-weight: 600;
+}
+
+/* VS Medallion */
+.vs-medallion-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vs-medallion {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFDF73 0%, #D4AF37 50%, #8A6818 100%);
+  border: 2px solid #FFF0A8;
+  box-shadow: 
+    0 6px 14px rgba(0, 0, 0, 0.85),
+    0 0 10px rgba(212, 175, 55, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vs-medallion.is-dueling {
+  animation: pulse-vs-glow 1.4s infinite alternate;
+}
+
+@keyframes pulse-vs-glow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 223, 115, 0.5);
+  }
+  100% {
+    transform: scale(1.12);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 215, 0, 0.95);
+  }
+}
+
+.vs-title {
+  font-size: 14px;
   font-weight: 900;
-  color: #FF007F;
-  text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+  font-family: 'Arial Black', sans-serif;
+  color: #1A1204;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Public Area */
-.public-area {
-  padding: 14px;
+/* ================= Public 6 Cards Board ================= */
+.public-board-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
 }
 
-.public-header {
+.board-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  padding: 0 4px;
 }
 
-.public-title {
-  font-size: 13px;
+.board-title {
+  font-size: 12px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #FFDF73;
+  letter-spacing: 0.5px;
 }
 
-.hint-text {
+.turn-hint-tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(0, 245, 160, 0.2);
+  border: 1px solid rgba(0, 245, 160, 0.5);
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.3);
+}
+
+.hint-blink {
   font-size: 11px;
+  font-weight: 800;
   color: #00F5A0;
-  animation: blink 1.2s infinite;
+  animation: blink-soft 1.2s infinite;
 }
 
-@keyframes blink {
-  0% { opacity: 0.4; }
+@keyframes blink-soft {
+  0% { opacity: 0.5; }
   100% { opacity: 1; }
 }
 
-.cards-grid {
+.public-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 9px;
   justify-items: center;
 }
 
-.card-cell {
+.card-cell-wrapper {
   position: relative;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  border-radius: 14px;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  border-radius: 10px;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
   will-change: transform;
 }
 
-.card-cell.is-selectable {
-  cursor: pointer;
-  animation: gentle-float 2s ease-in-out infinite alternate;
+.recessed-pocket {
+  position: relative;
+  border-radius: 9px;
 }
 
-@keyframes gentle-float {
+.empty-pocket-placeholder {
+  width: 86px;
+  height: 122px;
+  border-radius: 9px;
+  border: 1px dashed rgba(212, 175, 55, 0.2);
+  background: rgba(0, 20, 15, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pocket-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.card-cell-wrapper.is-selectable {
+  cursor: pointer;
+  animation: table-card-hover 2s ease-in-out infinite alternate;
+}
+
+@keyframes table-card-hover {
   0% { transform: translateY(0); }
   100% { transform: translateY(-4px); }
 }
 
-.card-cell.is-selectable:active {
-  transform: scale(0.94) !important;
+.card-cell-wrapper.is-selectable:active {
+  transform: scale(0.95) !important;
 }
 
-/* Stop gentle-float immediately when card becomes active target to eliminate animation conflict flicker */
-.card-cell.is-active-target {
+.card-cell-wrapper.is-active-target {
   animation: none !important;
   transform: translateY(-8px) scale(1.04);
-  box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
-  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.95);
+  filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.9));
   z-index: 10;
 }
 
-.card-cell.is-being-covered {
-  animation: target-covered-burst 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.card-cell-wrapper.is-being-covered {
+  animation: target-covered-burst 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   z-index: 20;
 }
 
@@ -529,8 +794,8 @@ function confirmExit() {
     filter: brightness(1);
   }
   50% {
-    transform: scale(1.15) translateY(-10px);
-    filter: brightness(1.6) drop-shadow(0 0 20px #00F5A0);
+    transform: scale(1.15) translateY(-8px);
+    filter: brightness(1.5) drop-shadow(0 0 24px #FFDF73);
   }
   100% {
     transform: scale(1);
@@ -538,7 +803,7 @@ function confirmExit() {
   }
 }
 
-/* Drawn Card Animation Wrapper */
+/* ================= Drawn Card Animation Wrapper ================= */
 .drawn-anim-wrapper {
   position: relative;
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -551,15 +816,15 @@ function confirmExit() {
 @keyframes flip-dramatic {
   0% {
     transform: scale(0.9) rotateY(180deg);
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
   }
   50% {
-    transform: scale(1.18) rotateY(90deg);
-    filter: drop-shadow(0 0 30px rgba(0, 245, 160, 0.9));
+    transform: scale(1.16) rotateY(90deg);
+    filter: drop-shadow(0 0 28px rgba(255, 215, 0, 0.95));
   }
   100% {
-    transform: scale(1.05) rotateY(0deg);
-    filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.8));
+    transform: scale(1.04) rotateY(0deg);
+    filter: drop-shadow(0 0 20px rgba(0, 245, 160, 0.85));
   }
 }
 
@@ -569,38 +834,23 @@ function confirmExit() {
 
 @keyframes fly-cover {
   0% {
-    transform: scale(1.05) translateY(0);
+    transform: scale(1.04) translateY(0);
     opacity: 1;
   }
   60% {
     transform: scale(1.1) translateY(45px);
-    opacity: 0.9;
+    opacity: 0.92;
   }
   100% {
-    transform: scale(0.95) translateY(80px);
+    transform: scale(0.96) translateY(85px);
     opacity: 0;
   }
 }
 
-.empty-card-placeholder {
-  width: 90px;
-  height: 126px;
-  border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder-text {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-/* Controls */
+/* ================= Bottom Controls Section ================= */
 .controls-panel {
-  margin-top: 10px;
-  min-height: 56px;
+  margin-top: 6px;
+  min-height: 58px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -611,13 +861,15 @@ function confirmExit() {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px;
-  background: rgba(0, 245, 160, 0.1);
-  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(6, 78, 59, 0.45);
+  border: 1px solid rgba(0, 245, 160, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 245, 160, 0.2);
 }
 
 .prompt-icon {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .prompt-text {
@@ -633,22 +885,65 @@ function confirmExit() {
 
 .guess-btn {
   flex: 1;
-  height: 54px;
+  height: 56px;
   border-radius: 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  border: 2px solid rgba(255, 223, 115, 0.7);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.guess-high {
+  background: linear-gradient(180deg, #10B981 0%, #059669 50%, #047857 100%);
+  border-color: #A7F3D0;
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+.guess-low {
+  background: linear-gradient(180deg, #F43F5E 0%, #E11D48 50%, #BE123C 100%);
+  border-color: #FECDD3;
+  box-shadow: 0 8px 20px rgba(225, 29, 72, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+.btn-hover-high {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+.btn-hover-low {
+  transform: scale(0.97);
+  filter: brightness(1.15);
 }
 
 .arrow-icon {
-  font-size: 16px;
+  font-size: 18px;
+  color: #FFFFFF;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.btn-text-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
 }
 
 .guess-label {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 900;
+  color: #FFFFFF;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.guess-sub {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
 }
 
 .other-turn-box {
@@ -656,11 +951,11 @@ function confirmExit() {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px;
+  padding: 12px 14px;
 }
 
 .pulsing-dot {
-  color: #00E5FF;
+  color: #FFDF73;
   animation: pulse-dot 1s infinite alternate;
 }
 
@@ -671,10 +966,11 @@ function confirmExit() {
 
 .other-turn-text {
   font-size: 12px;
-  color: #94A3B8;
+  color: #CBD5E0;
+  font-weight: 600;
 }
 
-/* Modals */
+/* ================= Modals ================= */
 .result-modal-mask {
   position: fixed;
   top: 0;
